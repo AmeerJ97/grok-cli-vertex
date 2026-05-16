@@ -1,7 +1,7 @@
 # grok-cli-vertex: a Vertex AI-focused Grok coding agent
 
 [CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
-[npm](https://www.npmjs.com/package/grok-dev)
+[npm package inherited from upstream](https://www.npmjs.com/package/grok-dev)
 [License: MIT](./LICENSE)
 [TypeScript](https://www.typescriptlang.org/)
 [Bun](https://bun.sh/)
@@ -12,7 +12,11 @@ This is a standalone fork of `grok-cli` focused on making **Google Cloud Vertex 
 
 Some native xAI paths remain because they are inherited from upstream and useful for compatibility, comparison, or fallback. They are not the main product focus of this fork.
 
-[https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb](https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb)
+## Upstream attribution
+
+This project started as a fork of the open-source `grok-cli` codebase. This repo
+is maintained as a separate Vertex-focused project, not as a replacement for or
+official distribution of the upstream project.
 
 ---
 
@@ -22,7 +26,7 @@ Some native xAI paths remain because they are inherited from upstream and useful
 curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
 ```
 
-**Alternative installs** (requires Bun on PATH):
+**Alternative install** (requires Bun on PATH; package name is still inherited):
 
 ```bash
 bun add -g grok-dev
@@ -77,9 +81,9 @@ grok --prompt "review the repo overnight" --batch-api
 grok --verify
 ```
 
-`--batch-api` uses xAI's Batch API for lower-cost unattended runs. It is a good
-fit for scripts, CI, schedules, and other non-interactive workflows where a
-delayed result is fine.
+`--batch-api` is inherited from the native xAI backend and is not available on
+Vertex. In Vertex mode, the CLI returns a typed capability error instead of
+pretending the endpoint exists.
 
 **Continue a saved session:**
 
@@ -156,48 +160,35 @@ grok models
 grok fix the flaky test in src/foo.test.ts
 ```
 
-**Generate images or short videos from chat:**
-
-```bash
-grok "Generate a retro-futuristic logo for my CLI called Grok Forge"
-grok "Edit ./assets/hero.png into a watercolor poster"
-grok "Animate ./assets/cover.jpg into a 6 second cinematic push-in"
-```
-
-Image and video generation are exposed as agent tools inside normal chat sessions.
-You keep using a text model for the session, and Grok saves generated media under
-`.grok/generated-media/` by default unless you ask for a specific output path.
+Media generation commands are inherited from the xAI backend. They are capability
+gated and intentionally return a clear typed error when the active provider is
+Vertex.
 
 ---
 
-## What you actually get
+## What this fork focuses on
 
+| Area | Direction |
+| --- | --- |
+| **Vertex AI backend** | Treat Google Cloud Vertex AI as a primary Grok provider, not a side-channel patch. |
+| **Provider abstraction** | Keep backend-specific behavior behind a typed adapter contract. |
+| **ADC authentication** | Use Google Application Default Credentials for local and workstation flows. |
+| **Vertex model routing** | Encode the documented Vertex Grok SKUs and avoid xAI-only assumptions. |
+| **Capability gates** | Return clear typed errors for features that exist on xAI but not Vertex. |
+| **CLI continuity** | Preserve useful upstream CLI workflows where they still make sense. |
+| **Operational evidence** | Keep verification, typed errors, and runtime self-detection easy to inspect. |
 
-| Thing                             | What it means                                                                                                                                                                                                              |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Built for the Grok API**        | Defaults tuned for the xAI API; models like `grok-4.3`, `grok-4.20-non-reasoning`, `grok-4.20-multi-agent-0309`, plus current flagship and multi-agent variants—run `grok models` for the full menu.                       |
-| **X + web search**                | `**search_x`** and `**search_web`** tools—live posts and docs without pretending the internet stopped in 2023.                                                                                                             |
-| **Media generation**              | Built-in `**generate_image`** and `**generate_video`** tools for text-to-image, image editing, text-to-video, and image-to-video flows. Generated files are saved locally so you can reuse them after the xAI URLs expire. |
-| **Sub-agents (default behavior)** | Foreground `**task`** delegation (e.g. explore, general, or computer) plus background `**delegate`** for read-only deep dives—parallelize like you mean it.                                                                |
-| **Verify**                        | `**/verify`** or `**--verify`** — inspects your app, builds, tests, boots it, and runs browser smoke checks in a sandboxed environment. Screenshots and video included.                                                    |
-| **Computer use**                  | Built-in `**computer`** sub-agent for host desktop automation via `**agent-desktop`**. It prefers semantic accessibility snapshots and stable refs, with screenshots saved under `**.grok/computer/**` when requested.     |
-| **Custom sub-agents**             | Define named agents with `**subAgents`** in `**~/.grok/user-settings.json`** and manage them from the TUI with `**/agents**`.                                                                                              |
-| **Remote control**                | Pair **Telegram** from the TUI (`/remote-control` → Telegram): DM your bot, `**/pair`**, approve the code in-terminal. Keep the CLI running while you ping it from your phone.                                             |
-| **No “mystery meat” UI**          | OpenTUI React terminal UI—fast, keyboard-driven, not whatever glitchy thing you’re thinking of.                                                                                                                            |
-| **Skills**                        | Agent Skills under `**.agents/skills/<name>/SKILL.md`** (project) or `**~/.agents/skills/`** (user). Use `**/skills**` in the TUI to list what’s installed.                                                                |
-| **MCPs**                          | Extend with Model Context Protocol servers—configure via `**/mcps`** in the TUI or `**.grok/settings.json`** (`mcpServers`).                                                                                               |
-| **Sessions**                      | Conversations persist; `**--session latest`** picks up where you left off.                                                                                                                                                 |
-| **Headless**                      | `**--prompt`** / `**-p`** for non-interactive runs—pipe it, script it, bench it.                                                                                                                                           |
-| **Hackable**                      | TypeScript, clear agent loop, bash-first tools—fork it, shamelessly.                                                                                                                                                       |
-
-
-### Coming soon
-
-**Deeper autonomous agent testing** — persistent sandbox sessions, richer browser workflows, and stronger "prove it works" evidence.
+Inherited xAI features are compatibility surfaces. New project work should
+prefer the Vertex provider path unless a change is explicitly about fallback or
+upstream parity.
 
 ---
 
-## API key (pick one)
+## Native xAI fallback configuration
+
+Vertex mode does not require a `GROK_API_KEY`; it uses Google ADC plus a Vertex
+project id. The settings below apply when you intentionally run the inherited
+native xAI provider.
 
 **Environment (good for CI):**
 
@@ -243,9 +234,9 @@ Optional: `**GROK_BASE_URL**` (default `https://api.x.ai/v1`), `**GROK_MODEL**`,
 
 ---
 
-## Vertex AI Grok (Google Cloud backend)
+## Vertex AI Grok
 
-`grok-cli` can route Grok traffic through **Google Cloud Vertex AI** instead of the native xAI API. The four documented Vertex Grok SKUs are supported:
+This fork routes Grok traffic through **Google Cloud Vertex AI** as the preferred backend. The four documented Vertex Grok SKUs are supported:
 
 - `grok-4.20-reasoning` (200K context — default chat model)
 - `grok-4.20-non-reasoning`
@@ -292,7 +283,7 @@ GROK_PROVIDER=vertex GROK_VERTEX_PROJECT_ID=my-gcp-project grok
 
 - xAI `/responses` endpoint and the multi-agent SKUs
 - Hosted web search and X search (`search_web`, `search_x`)
-- Image generation (`grok-imagine-image`) and video generation (`grok-imagine-video`)
+- Native xAI image and video generation endpoints
 - xAI Batch API (`--batch-api`)
 - Telegram audio transcription via Grok STT
 
@@ -447,7 +438,7 @@ Make sure you have a modern shell and `curl` available:
 which curl
 
 # If using an outdated shell, try with bash explicitly
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh)"
 ```
 
 **Bun not found**
@@ -461,9 +452,10 @@ bun add -g grok-dev
 
 ### API key issues
 
-**"Missing GROK_API_KEY" error**
+**"Missing GROK_API_KEY" error in native xAI mode**
 
-Set your API key using one of these methods:
+This applies only when running the inherited native xAI provider. Vertex mode
+uses Google ADC and `GROK_VERTEX_PROJECT_ID`.
 
 ```bash
 # Environment variable
@@ -473,7 +465,7 @@ export GROK_API_KEY=your_key_here
 grok -k your_key_here
 ```
 
-Get your API key from [x.ai](https://x.ai).
+Get native xAI API keys from [x.ai](https://x.ai).
 
 ### Terminal UI issues
 
@@ -513,8 +505,8 @@ If you're on Intel Mac or Linux, sandbox mode is not available. Use standard mod
 
 **Slow response times**
 
-- Check your network connection to x.ai API
-- Try `grok-4.20-non-reasoning` for non-reasoning workloads
+- Check your network connection to Google Cloud Vertex AI
+- Try `grok-4.1-fast-non-reasoning` for lower-latency Vertex workloads
 - Reduce `--max-tool-rounds` for headless runs
 
 **High memory usage**
@@ -524,7 +516,7 @@ If you're on Intel Mac or Linux, sandbox mode is not available. Use standard mod
 
 ### Getting help
 
-- Check existing [issues](https://github.com/superagent-ai/grok-cli/issues)
+- Check existing [issues](https://github.com/AmeerJ97/grok-cli-vertex/issues)
 - Open a new issue with:
   - OS and terminal emulator version
   - Grok CLI version (`grok --version`)
@@ -556,7 +548,7 @@ bun run lint
 
 ## Trademarks
 
-"Grok" is a registered trademark of xAI Corp. This project is not affiliated with, endorsed by, or sponsored by xAI Corp. All trademarks belong to their respective owners.
+"Grok" is a registered trademark of xAI Corp. This project is not affiliated with, endorsed by, or sponsored by xAI Corp. or Google Cloud. All trademarks belong to their respective owners.
 
 ---
 

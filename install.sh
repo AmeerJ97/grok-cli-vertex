@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP="grok"
-REPO="superagent-ai/grok-cli"
+REPO="AmeerJ97/grok-cli-vertex"
 RELEASES_API="https://api.github.com/repos/${REPO}/releases"
 USER_DIR="${HOME}/.grok"
 INSTALL_DIR="${USER_DIR}/bin"
@@ -17,11 +17,11 @@ written_path_command=""
 
 usage() {
   cat <<'EOF'
-Install Grok from GitHub Releases.
+Install grok-cli-vertex from GitHub Releases.
 
 Usage:
-  curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash
-  curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash -s -- --version 1.1.4
+  curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash -s -- --version 1.1.4
   bash install.sh --binary /path/to/grok
 
 Options:
