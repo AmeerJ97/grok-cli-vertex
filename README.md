@@ -1,14 +1,16 @@
-# grok-cli: an open-source coding agent for the Grok API
+# grok-cli-vertex: a Vertex AI-focused Grok coding agent
 
-[CI](https://github.com/superagent-ai/grok-cli/actions/workflows/typecheck.yml)
+[CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
 [npm](https://www.npmjs.com/package/grok-dev)
 [License: MIT](./LICENSE)
 [TypeScript](https://www.typescriptlang.org/)
 [Bun](https://bun.sh/)
 
-> **Disclaimer:** This project is community-built, open-source, and **not affiliated with, endorsed by, or sponsored by xAI Corp.** "Grok" is a trademark of xAI Corp. This tool uses the publicly available Grok API.
+> **Disclaimer:** This project is community-built, open-source, and **not affiliated with, endorsed by, or sponsored by xAI Corp. or Google Cloud.** "Grok" is a trademark of xAI Corp. Vertex AI access to Grok is provided by Google Cloud as a partner integration.
 
-An open-source terminal coding agent that connects to xAI’s Grok API — real-time **X search**, **web search**, the full Grok model lineup, **sub-agents on by default**, **remote control via Telegram** (pair once, drive the agent from your phone while the CLI runs), and a terminal UI built with **Bun** and **OpenTUI**.
+This is a standalone fork of `grok-cli` focused on making **Google Cloud Vertex AI** a first-class backend for Grok-powered coding workflows. The project direction is Vertex-first: provider abstraction, ADC-based authentication, Vertex model routing, capability gates, and reliable CLI behavior when Grok is accessed through Google Cloud.
+
+Some native xAI paths remain because they are inherited from upstream and useful for compatibility, comparison, or fallback. They are not the main product focus of this fork.
 
 [https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb](https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb)
 
@@ -17,7 +19,7 @@ An open-source terminal coding agent that connects to xAI’s Grok API — real-
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
 ```
 
 **Alternative installs** (requires Bun on PATH):
@@ -35,7 +37,7 @@ grok uninstall --dry-run
 grok uninstall --keep-config
 ```
 
-**Prerequisites:** a **Grok API key** from [x.ai](https://x.ai) and a modern terminal emulator for the interactive OpenTUI experience. Headless `--prompt` mode does not depend on terminal UI support. If you want host desktop automation via the built-in computer sub-agent, also enable **Accessibility** permission for your terminal app on macOS.
+**Prerequisites:** a Google Cloud project with Vertex AI enabled, Application Default Credentials for local auth, and a modern terminal emulator for the interactive OpenTUI experience. Native xAI mode still requires a **Grok API key** from [x.ai](https://x.ai). Headless `--prompt` mode does not depend on terminal UI support. If you want host desktop automation via the built-in computer sub-agent, also enable **Accessibility** permission for your terminal app on macOS.
 
 ---
 
