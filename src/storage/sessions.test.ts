@@ -11,6 +11,7 @@ describe("SessionStore recap persistence", () => {
   const tempRoot = path.join(process.cwd(), ".tmp-session-tests");
   let tempHome = "";
   let tempCwd = "";
+  let tempDirs: string[] = [];
 
   beforeEach(() => {
     fs.mkdirSync(tempRoot, { recursive: true });
@@ -27,6 +28,8 @@ describe("SessionStore recap persistence", () => {
     process.env.HOME = originalHome;
     fs.rmSync(tempHome, { recursive: true, force: true });
     fs.rmSync(tempCwd, { recursive: true, force: true });
+    for (const dir of tempDirs) fs.rmSync(dir, { recursive: true, force: true });
+    tempDirs = [];
     fs.rmSync(tempRoot, { recursive: true, force: true });
   });
 
@@ -60,5 +63,18 @@ describe("SessionStore recap persistence", () => {
     store.setRecap(session.id, null);
 
     expect(store.getRequiredSession(session.id).recap).toBeNull();
+  });
+
+  it("touches cwd_last when resuming the latest session", () => {
+    const firstCwd = fs.mkdtempSync(path.join(tempRoot, "grok-session-first-"));
+    const resumedCwd = fs.mkdtempSync(path.join(tempRoot, "grok-session-resumed-"));
+    tempDirs.push(firstCwd, resumedCwd);
+
+    const store = new SessionStore(firstCwd);
+    const session = store.createSession("grok-4.3", "agent", firstCwd);
+    const resumed = store.openSession("latest", "grok-4.3", "agent", resumedCwd);
+
+    expect(resumed.id).toBe(session.id);
+    expect(resumed.cwdLast).toBe(resumedCwd);
   });
 });

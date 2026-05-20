@@ -37,7 +37,9 @@ export class SessionStore {
 
     if (selector === "latest") {
       const latest = this.getLatestSession();
-      return latest ?? this.createSession(model, mode, cwd);
+      if (!latest) return this.createSession(model, mode, cwd);
+      this.touchSession(latest.id, cwd);
+      return this.getRequiredSession(latest.id);
     }
 
     const session = this.getSessionById(selector);
