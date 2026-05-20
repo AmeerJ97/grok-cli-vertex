@@ -249,8 +249,49 @@ resolve_release_version() {
     return
   fi
 
-  local tag
-  tag=$(curl -fsSL "${RELEASES_API}/latest" \
+  local release_json tag status release_body_file release_err_file curl_status
+  release_body_file=$(mktemp "${TMPDIR:-/tmp}/grok-release-body.XXXXXX")
+  release_err_file=$(mktemp "${TMPDIR:-/tmp}/grok-release-err.XXXXXX")
+  status=$(curl -sSL -w "%{http_code}" -o "$release_body_file" "${RELEASES_API}/latest" 2>"$release_err_file")
+  curl_status=$?
+
+  if [[ $curl_status -ne 0 ]]; then
+    echo "Failed to query ${RELEASES_API}/latest (network/API error)." >&2
+    if [[ -s "$release_err_file" ]]; then
+      cat "$release_err_file" >&2
+    fi
+    rm -f "$release_body_file" "$release_err_file"
+    exit 1
+  fi
+
+  if [[ "$status" == "404" ]]; then
+    cat >&2 <<EOF
+No published GitHub release was found for ${REPO}.
+
+The curl installer downloads prebuilt release assets, so a release must exist
+before this install path can work. Publish a release with assets named:
+  grok-linux-x64
+  grok-darwin-arm64
+  grok-windows-x64.exe
+  checksums.txt
+
+For local testing, build a binary and run:
+  bash install.sh --binary /path/to/grok
+EOF
+    rm -f "$release_body_file" "$release_err_file"
+    exit 1
+  fi
+
+  if [[ "$status" != "200" ]]; then
+    echo "Failed to query ${RELEASES_API}/latest (HTTP ${status})." >&2
+    rm -f "$release_body_file" "$release_err_file"
+    exit 1
+  fi
+
+  release_json=$(cat "$release_body_file")
+  rm -f "$release_body_file" "$release_err_file"
+
+  tag=$(printf '%s' "$release_json" \
     | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
     | head -n 1)
   RESOLVED_VERSION="${tag#grok-dev@}"

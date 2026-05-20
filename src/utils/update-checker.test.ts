@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const RELEASE_URL = "https://api.github.com/repos/superagent-ai/grok-cli/releases/latest";
+const RELEASE_URL = "https://api.github.com/repos/AmeerJ97/grok-cli-vertex/releases/latest";
 const isCurrentScriptManagedInstallMock = vi.hoisted(() => vi.fn(() => true));
 const getScriptInstallContextMock = vi.hoisted(() =>
   vi.fn(() => ({
