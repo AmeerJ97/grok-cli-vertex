@@ -11,6 +11,7 @@ describe("SessionStore recap persistence", () => {
   const tempRoot = path.join(process.cwd(), ".tmp-session-tests");
   let tempHome = "";
   let tempCwd = "";
+  let tempDirs: string[] = [];
 
   beforeEach(() => {
     fs.mkdirSync(tempRoot, { recursive: true });
@@ -27,6 +28,8 @@ describe("SessionStore recap persistence", () => {
     process.env.HOME = originalHome;
     fs.rmSync(tempHome, { recursive: true, force: true });
     fs.rmSync(tempCwd, { recursive: true, force: true });
+    for (const dir of tempDirs) fs.rmSync(dir, { recursive: true, force: true });
+    tempDirs = [];
     fs.rmSync(tempRoot, { recursive: true, force: true });
   });
 
@@ -60,5 +63,23 @@ describe("SessionStore recap persistence", () => {
     store.setRecap(session.id, null);
 
     expect(store.getRequiredSession(session.id).recap).toBeNull();
+  });
+
+  it("touches cwd_last when resuming the latest session", () => {
+    const workspaceRoot = fs.mkdtempSync(path.join(tempRoot, "grok-session-workspace-"));
+    const firstCwd = path.join(workspaceRoot, "first");
+    const resumedCwd = path.join(workspaceRoot, "resumed");
+    fs.mkdirSync(path.join(workspaceRoot, ".git"), { recursive: true });
+    fs.mkdirSync(firstCwd, { recursive: true });
+    fs.mkdirSync(resumedCwd, { recursive: true });
+    tempDirs.push(workspaceRoot);
+
+    const firstStore = new SessionStore(firstCwd);
+    const session = firstStore.createSession("grok-4.3", "agent", firstCwd);
+    const resumedStore = new SessionStore(resumedCwd);
+    const resumed = resumedStore.openSession("latest", "grok-4.3", "agent", resumedCwd);
+
+    expect(resumed.id).toBe(session.id);
+    expect(resumed.cwdLast).toBe(resumedCwd);
   });
 });
