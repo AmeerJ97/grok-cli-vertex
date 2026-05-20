@@ -1,4 +1,5 @@
 import { getModelInfo } from "../grok/models";
+import { getVertexModelInfo } from "../providers/vertex/models";
 import type { UsageEvent, UsageSource } from "../types/index";
 import { getDatabase } from "./db";
 
@@ -92,7 +93,7 @@ export function listSessionUsage(sessionId: string): UsageEvent[] {
 }
 
 function estimateCostMicros(model: string, inputTokens: number, outputTokens: number): number {
-  const info = getModelInfo(model);
+  const info = getModelInfo(model) ?? getVertexModelInfo(model);
   if (!info) return 0;
   return Math.round(inputTokens * info.inputPrice + outputTokens * info.outputPrice);
 }
