@@ -16,6 +16,8 @@ export const SLASH_MENU_ITEMS: SlashMenuItem[] = [
   { id: "wallet", label: "wallet", description: "Wallet and payment settings" },
   { id: "models", label: "models", description: "Select a model", aliases: ["model", "mode"] },
   { id: "new", label: "new session", description: "Start a new session" },
+  { id: "sessions", label: "sessions", description: "List saved sessions" },
+  { id: "resume", label: "resume", description: "Resume a saved session" },
   { id: "commit-push", label: "commit & push", description: "Commit and push" },
   { id: "commit-pr", label: "commit & pr", description: "Commit and open PR" },
   { id: "review", label: "review", description: "Review recent changes" },
@@ -34,6 +36,17 @@ export function filterSlashMenuItems(items: SlashMenuItem[], query: string): Sla
     .filter((entry) => entry.score !== Number.POSITIVE_INFINITY)
     .sort((a, b) => a.score - b.score || a.index - b.index)
     .map((entry) => entry.item);
+}
+
+export function formatSlashMenuRow(item: SlashMenuItem, panelWidth: number): { label: string; description: string } {
+  const innerWidth = Math.max(0, panelWidth - 4);
+  const label = truncateSlashText(`/${item.label}`, innerWidth);
+  const descriptionWidth = innerWidth - label.length - 1;
+
+  return {
+    label,
+    description: descriptionWidth >= 12 ? truncateSlashText(item.description, descriptionWidth) : "",
+  };
 }
 
 function normalizeSlashSearchQuery(query: string): string {
@@ -66,4 +79,11 @@ function tokenizeSearchText(value: string): string[] {
   const normalized = value.toLowerCase();
   const tokens = normalized.split(/[^a-z0-9]+/).filter(Boolean);
   return [normalized, ...tokens];
+}
+
+function truncateSlashText(value: string, maxWidth: number): string {
+  if (maxWidth <= 0) return "";
+  if (value.length <= maxWidth) return value;
+  if (maxWidth <= 3) return value.slice(0, maxWidth);
+  return `${value.slice(0, maxWidth - 3)}...`;
 }
