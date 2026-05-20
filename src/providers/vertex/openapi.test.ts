@@ -457,6 +457,27 @@ describe("Vertex Grok adapter", () => {
     ]);
   });
 
+  it("does not request a tool step for malformed Vertex function calls without a callable tool", () => {
+    const chunks = convertVertexStreamResponseToOpenAIChunks(
+      {
+        candidates: [
+          {
+            index: 0,
+            finishReason: "MALFORMED_FUNCTION_CALL",
+            content: {
+              parts: [{ text: "I could not form a valid tool call." }],
+            },
+          },
+        ],
+      },
+      { id: "chatcmpl-malformed-tool", model: "grok-4-1-fast-reasoning", created: 123 },
+    );
+
+    expect(chunks.at(-1)).toMatchObject({
+      choices: [{ finish_reason: "stop" }],
+    });
+  });
+
   it("fetches Vertex with ADC bearer auth and returns translated chat JSON", async () => {
     process.env.GROK_VERTEX_PROJECT_ID = "project-1";
     process.env.GROK_VERTEX_LOCATION = "europe-west1";
