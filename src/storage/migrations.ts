@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from "./db";
 
-const LATEST_DB_VERSION = 3;
+const LATEST_DB_VERSION = 4;
 
 export function applyMigrations(db: SQLiteDatabase): void {
   const version = Number(db.pragma("user_version", { simple: true })) || 0;
@@ -16,6 +16,10 @@ export function applyMigrations(db: SQLiteDatabase): void {
     }
     if (version < LATEST_DB_VERSION) {
       createSessionRecapSchema(db);
+      db.pragma("user_version = 3");
+    }
+    if (version < 4) {
+      createSideQuestionSchema(db);
       db.pragma(`user_version = ${LATEST_DB_VERSION}`);
     }
 
@@ -142,6 +146,24 @@ function createSessionRecapSchema(db: SQLiteDatabase): void {
 
 function ensureLatestSchema(db: SQLiteDatabase): void {
   createSessionRecapSchema(db);
+  createSideQuestionSchema(db);
+}
+
+function createSideQuestionSchema(db: SQLiteDatabase): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS side_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+      question TEXT NOT NULL,
+      answer_text TEXT,
+      error_text TEXT,
+      model TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    ) STRICT;
+
+    CREATE INDEX IF NOT EXISTS idx_side_questions_session_created
+      ON side_questions(session_id, created_at ASC);
+  `);
 }
 
 function addColumnIfMissing(db: SQLiteDatabase, table: string, column: string, definition: string): void {

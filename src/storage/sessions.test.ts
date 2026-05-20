@@ -82,4 +82,21 @@ describe("SessionStore recap persistence", () => {
     expect(resumed.id).toBe(session.id);
     expect(resumed.cwdLast).toBe(resumedCwd);
   });
+
+  it("lists recent sessions for the current workspace", async () => {
+    const workspaceRoot = fs.mkdtempSync(path.join(tempRoot, "grok-session-workspace-"));
+    const cwd = path.join(workspaceRoot, "repo");
+    fs.mkdirSync(path.join(workspaceRoot, ".git"), { recursive: true });
+    fs.mkdirSync(cwd, { recursive: true });
+    tempDirs.push(workspaceRoot);
+
+    const store = new SessionStore(cwd);
+    const first = store.createSession("grok-4.3", "agent", cwd);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    const second = store.createSession("grok-4.3", "agent", cwd);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    store.touchSession(first.id, cwd);
+
+    expect(store.listRecentSessions(2).map((session) => session.id)).toEqual([first.id, second.id]);
+  });
 });
