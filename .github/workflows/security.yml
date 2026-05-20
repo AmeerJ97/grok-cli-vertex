@@ -38,7 +38,7 @@ jobs:
 
       - name: Scan for secrets (pull request)
         if: github.event_name == 'pull_request'
-        uses: trufflesecurity/trufflehog@v3.90.1
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
@@ -47,7 +47,7 @@ jobs:
 
       - name: Scan for secrets (push)
         if: github.event_name == 'push'
-        uses: trufflesecurity/trufflehog@v3.90.1
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           base: ${{ github.event.before }}
@@ -56,7 +56,7 @@ jobs:
 
       - name: Scan for secrets (schedule)
         if: github.event_name == 'schedule'
-        uses: trufflesecurity/trufflehog@v3.90.1
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           extra_args: --only-verified
