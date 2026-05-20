@@ -249,8 +249,25 @@ resolve_release_version() {
     return
   fi
 
-  local tag
-  tag=$(curl -fsSL "${RELEASES_API}/latest" \
+  local release_json tag
+  if ! release_json=$(curl -fsL "${RELEASES_API}/latest"); then
+    cat >&2 <<EOF
+No published GitHub release was found for ${REPO}.
+
+The curl installer downloads prebuilt release assets, so a release must exist
+before this install path can work. Publish a release with assets named:
+  grok-linux-x64
+  grok-darwin-arm64
+  grok-windows-x64.exe
+  checksums.txt
+
+For local testing, build a binary and run:
+  bash install.sh --binary /path/to/grok
+EOF
+    exit 1
+  fi
+
+  tag=$(printf '%s' "$release_json" \
     | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' \
     | head -n 1)
   RESOLVED_VERSION="${tag#grok-dev@}"
