@@ -14,6 +14,7 @@ import {
 } from "./headless/output";
 import { runTelegramHeadlessBridge } from "./telegram/headless-bridge";
 import { startScheduleDaemon } from "./tools/schedule";
+import { getInteractiveRendererConfig } from "./ui/renderer-config";
 import { processAtMentions } from "./utils/at-mentions.js";
 import { runScriptManagedUninstall } from "./utils/install-manager";
 import {
@@ -67,14 +68,7 @@ async function startInteractive(
   const { createElement } = await import("react");
   const { App } = await import("./ui/app");
 
-  const renderer = await createCliRenderer({
-    exitOnCtrlC: false,
-    // Lets terminals (Kitty, iTerm2, WezTerm, …) report Command as `super` on KeyEvent — needed for ⌘C in the TUI.
-    useKittyKeyboard: {
-      disambiguate: true,
-      alternateKeys: true,
-    },
-  });
+  const renderer = await createCliRenderer(getInteractiveRendererConfig());
 
   const onExit = () => {
     void agent.cleanup().finally(() => {
