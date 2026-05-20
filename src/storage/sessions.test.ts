@@ -66,13 +66,18 @@ describe("SessionStore recap persistence", () => {
   });
 
   it("touches cwd_last when resuming the latest session", () => {
-    const firstCwd = fs.mkdtempSync(path.join(tempRoot, "grok-session-first-"));
-    const resumedCwd = fs.mkdtempSync(path.join(tempRoot, "grok-session-resumed-"));
-    tempDirs.push(firstCwd, resumedCwd);
+    const workspaceRoot = fs.mkdtempSync(path.join(tempRoot, "grok-session-workspace-"));
+    const firstCwd = path.join(workspaceRoot, "first");
+    const resumedCwd = path.join(workspaceRoot, "resumed");
+    fs.mkdirSync(path.join(workspaceRoot, ".git"), { recursive: true });
+    fs.mkdirSync(firstCwd, { recursive: true });
+    fs.mkdirSync(resumedCwd, { recursive: true });
+    tempDirs.push(workspaceRoot);
 
-    const store = new SessionStore(firstCwd);
-    const session = store.createSession("grok-4.3", "agent", firstCwd);
-    const resumed = store.openSession("latest", "grok-4.3", "agent", resumedCwd);
+    const firstStore = new SessionStore(firstCwd);
+    const session = firstStore.createSession("grok-4.3", "agent", firstCwd);
+    const resumedStore = new SessionStore(resumedCwd);
+    const resumed = resumedStore.openSession("latest", "grok-4.3", "agent", resumedCwd);
 
     expect(resumed.id).toBe(session.id);
     expect(resumed.cwdLast).toBe(resumedCwd);
