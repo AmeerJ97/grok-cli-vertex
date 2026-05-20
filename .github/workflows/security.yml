@@ -36,10 +36,27 @@ jobs:
       - name: Audit dependency lifecycle scripts
         run: bun pm untrusted
 
-      - name: Scan for secrets
+      - name: Scan for secrets (pull request)
+        if: github.event_name == 'pull_request'
         uses: trufflesecurity/trufflehog@v3.90.1
         with:
           path: ./
-          base: ${{ github.event.pull_request.base.sha || github.event.before }}
-          head: ${{ github.event.pull_request.head.sha || github.sha }}
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      - name: Scan for secrets (push)
+        if: github.event_name == 'push'
+        uses: trufflesecurity/trufflehog@v3.90.1
+        with:
+          path: ./
+          base: ${{ github.event.before }}
+          head: ${{ github.sha }}
+          extra_args: --only-verified
+
+      - name: Scan for secrets (schedule)
+        if: github.event_name == 'schedule'
+        uses: trufflesecurity/trufflehog@v3.90.1
+        with:
+          path: ./
           extra_args: --only-verified
