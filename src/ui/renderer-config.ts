@@ -1,6 +1,6 @@
 import type { CliRendererConfig } from "@opentui/core";
 
-type EnvLike = { TMUX?: string };
+type EnvLike = { TMUX?: string | undefined };
 
 export function isTmuxSession(env: EnvLike = process.env): boolean {
   return Boolean(env.TMUX);
