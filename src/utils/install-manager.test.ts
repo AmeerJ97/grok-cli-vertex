@@ -4,6 +4,7 @@ import path from "path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   buildScriptUninstallPlan,
+  GROK_GITHUB_REPO,
   getInstallMetadataPath,
   getReleaseTargetForPlatform,
   getScriptInstallContext,
@@ -53,6 +54,10 @@ describe("parseChecksumsFile", () => {
 });
 
 describe("script install metadata", () => {
+  it("uses the public fork repository for script-managed releases", () => {
+    expect(GROK_GITHUB_REPO).toBe("AmeerJ97/grok-cli-vertex");
+  });
+
   it("round-trips metadata through write and load", () => {
     const homeDir = createTempDir("grok-meta-");
     const installDir = getScriptInstallDir(homeDir);
@@ -60,7 +65,7 @@ describe("script install metadata", () => {
       schemaVersion: 1,
       installMethod: "script" as const,
       version: "1.2.3",
-      repo: "superagent-ai/grok-cli",
+      repo: GROK_GITHUB_REPO,
       binaryPath: path.join(installDir, "grok"),
       installDir,
       assetName: "grok-darwin-arm64",
@@ -92,7 +97,7 @@ describe("getScriptInstallContext", () => {
         schemaVersion: 1,
         installMethod: "script" as const,
         version: "1.2.3",
-        repo: "superagent-ai/grok-cli",
+        repo: GROK_GITHUB_REPO,
         binaryPath: path.join(installDir, currentTarget!.binaryName),
         installDir,
         assetName: currentTarget!.assetName,
@@ -126,7 +131,7 @@ describe("isCurrentScriptManagedInstall", () => {
         schemaVersion: 1,
         installMethod: "script" as const,
         version: "1.2.3",
-        repo: "superagent-ai/grok-cli",
+        repo: GROK_GITHUB_REPO,
         binaryPath,
         installDir,
         assetName: currentTarget.assetName,
@@ -153,7 +158,7 @@ describe("isCurrentScriptManagedInstall", () => {
         schemaVersion: 1,
         installMethod: "script" as const,
         version: "1.2.3",
-        repo: "superagent-ai/grok-cli",
+        repo: GROK_GITHUB_REPO,
         binaryPath,
         installDir,
         assetName: currentTarget.assetName,
@@ -179,7 +184,7 @@ describe("buildScriptUninstallPlan", () => {
         schemaVersion: 1,
         installMethod: "script" as const,
         version: "1.2.3",
-        repo: "superagent-ai/grok-cli",
+        repo: GROK_GITHUB_REPO,
         binaryPath: path.join(installDir, currentTarget.binaryName),
         installDir,
         assetName: currentTarget.assetName,
@@ -204,7 +209,7 @@ describe("buildScriptUninstallPlan", () => {
         schemaVersion: 1,
         installMethod: "script" as const,
         version: "1.2.3",
-        repo: "superagent-ai/grok-cli",
+        repo: GROK_GITHUB_REPO,
         binaryPath: path.join(installDir, currentTarget.binaryName),
         installDir,
         assetName: currentTarget.assetName,
