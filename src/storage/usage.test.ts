@@ -25,7 +25,11 @@ describe("usage telemetry", () => {
   afterEach(() => {
     closeDatabase();
     vi.restoreAllMocks();
-    process.env.HOME = originalHome;
+    if (originalHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = originalHome;
+    }
     fs.rmSync(tempHome, { recursive: true, force: true });
     fs.rmSync(tempCwd, { recursive: true, force: true });
     fs.rmSync(tempRoot, { recursive: true, force: true });
