@@ -945,7 +945,7 @@ function mapVertexFinishReason(reason: string | undefined): string | null {
     case "MAX_TOKENS":
       return "length";
     case "MALFORMED_FUNCTION_CALL":
-      return "tool_calls";
+      return "stop";
     case "SAFETY":
     case "RECITATION":
     case "BLOCKLIST":
