@@ -1,6 +1,13 @@
 export { getDatabasePath } from "./db";
 export { SessionStore } from "./sessions";
 export {
+  type AppendSideQuestionInput,
+  appendSideQuestion,
+  buildSideQuestionEntries,
+  formatSideQuestionHistory,
+  listSideQuestions,
+} from "./side-questions";
+export {
   appendCompaction,
   appendMessages,
   appendSystemMessage,

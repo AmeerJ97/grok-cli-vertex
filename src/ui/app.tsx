@@ -28,6 +28,7 @@ import type {
   Plan,
   PlanQuestion,
   ReasoningEffort,
+  SessionInfo,
   SubagentStatus,
   ToolCall,
   ToolResult,
@@ -94,7 +95,7 @@ import {
 } from "./plan";
 import { isProcessingStatusNudge } from "./processing-input";
 import { buildScheduleBrowseRows, ScheduleBrowserModal } from "./schedule-modal";
-import { filterSlashMenuItems, SLASH_MENU_ITEMS, type SlashMenuItem } from "./slash-menu";
+import { filterSlashMenuItems, formatSlashMenuRow, SLASH_MENU_ITEMS, type SlashMenuItem } from "./slash-menu";
 import {
   buildAssistantEntry,
   buildToolResultEntry,
@@ -360,6 +361,8 @@ const BUILTIN_TYPED_SLASH_COMMANDS = new Set([
   "/commit-pr",
   "/wallet",
   "/btw",
+  "/sessions",
+  "/resume",
 ]);
 
 interface SandboxRow {
@@ -459,6 +462,27 @@ const SANDBOX_ROWS: SandboxRow[] = [
 
 function getSandboxVisibleRows(mode: SandboxMode): SandboxRow[] {
   return mode === "shuru" ? SANDBOX_ROWS : SANDBOX_ROWS.slice(0, 1);
+}
+
+function formatSessionList(sessions: SessionInfo[]): string {
+  if (sessions.length === 0) {
+    return "No saved sessions for this workspace.";
+  }
+
+  return [
+    "Saved sessions for this workspace:",
+    "",
+    ...sessions.map((session, index) => {
+      const title = session.title || "Untitled session";
+      const updated = session.updatedAt
+        .toISOString()
+        .replace("T", " ")
+        .replace(/\.\d{3}Z$/, "Z");
+      return `${index + 1}. ${session.id} · ${title} · ${updated}`;
+    }),
+    "",
+    "Resume with `/resume latest` or `/resume <session-id>`.",
+  ].join("\n");
 }
 
 interface WalletDisplayInfo {
@@ -2232,6 +2256,43 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
         openWalletPicker();
         return true;
       }
+      if (c === "/sessions") {
+        setMessages((prev) => [...prev, buildAssistantEntry(formatSessionList(agent.listSessions()))]);
+        setTimeout(scrollToBottom, 10);
+        return true;
+      }
+      if (c === "/resume" || c.startsWith("/resume ")) {
+        const selector = cmd.trim().slice("/resume".length).trim();
+        if (!selector) {
+          setMessages((prev) => [...prev, buildAssistantEntry("Usage: /resume latest\nUsage: /resume <session-id>")]);
+          setTimeout(scrollToBottom, 10);
+          return true;
+        }
+
+        try {
+          const snapshot = agent.resumeSession(selector);
+          setMessages(snapshot?.entries ?? []);
+          setExpandedMessages(new Set());
+          activeTurnRef.current = null;
+          clearLiveTurnUi();
+          setSessionTitle(snapshot?.session.title ?? null);
+          setSessionId(snapshot?.session.id ?? agent.getSessionId());
+          setSessionRecap(snapshot?.session.recap?.text ?? agent.getSessionRecap());
+          setModeState(agent.getMode());
+          setModel(agent.getModel());
+          setActivePlan(null);
+          setPqs(initialPlanQuestionsState());
+          replacePasteBlocks([]);
+          queuedMessagesRef.current = [];
+          setQueuedMessages([]);
+          setTimeout(scrollToBottom, 10);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          setMessages((prev) => [...prev, buildAssistantEntry(`Failed to resume session: ${message}`)]);
+          setTimeout(scrollToBottom, 10);
+        }
+        return true;
+      }
       if (c === "/remote-control") {
         setConnectModalIndex(0);
         setShowConnectModal(true);
@@ -2269,6 +2330,14 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
         processMessage(COMMIT_PR_PROMPT);
         return true;
       }
+      if (c === "/btw history") {
+        setMessages((prev) => [
+          ...prev,
+          buildAssistantEntry(agent.formatSideQuestionHistory(), { sourceLabel: "BTW" }),
+        ]);
+        setTimeout(scrollToBottom, 10);
+        return true;
+      }
       if (c.startsWith("/btw ") || c === "/btw") {
         const question = cmd.trim().slice(4).trim();
         if (!question) {
@@ -2290,6 +2359,8 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
             const doneState: BtwState = { status: "done", question, answer: result.response };
             btwStateRef.current = doneState;
             setBtwState(doneState);
+            setMessages(agent.getChatEntries());
+            setTimeout(scrollToBottom, 10);
           })
           .catch((err) => {
             if (ac.signal.aborted) return;
@@ -2300,6 +2371,8 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
             };
             btwStateRef.current = errState;
             setBtwState(errState);
+            setMessages(agent.getChatEntries());
+            setTimeout(scrollToBottom, 10);
           });
         return true;
       }
@@ -2322,6 +2395,7 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
     },
     [
       agent,
+      clearLiveTurnUi,
       handleExit,
       openAgentsModal,
       openMcpModal,
@@ -2330,6 +2404,8 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
       openScheduleModal,
       processMessage,
       resetToNewSession,
+      replacePasteBlocks,
+      scrollToBottom,
       subAgents,
     ],
   );
@@ -2352,6 +2428,14 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
           break;
         case "wallet":
           openWalletPicker();
+          break;
+        case "sessions":
+          setMessages((p) => [...p, buildAssistantEntry(formatSessionList(agent.listSessions()))]);
+          setTimeout(scrollToBottom, 10);
+          break;
+        case "resume":
+          inputRef.current?.clear();
+          inputRef.current?.insertText("/resume latest");
           break;
         case "remote-control":
           setConnectModalIndex(0);
@@ -2425,6 +2509,7 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
       openScheduleModal,
       processMessage,
       resetToNewSession,
+      scrollToBottom,
       startupConfig.version,
     ],
   );
@@ -3612,6 +3697,7 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
           <box paddingLeft={2} paddingRight={2} paddingBottom={1} flexDirection="row" flexShrink={0}>
             <text fg={t.textDim}>{agent.getCwd().replace(os.homedir(), "~")}</text>
             {sandboxMode === "shuru" ? <text fg="#f97316">{" · sandbox"}</text> : null}
+            {sessionId ? <text fg={t.textDim}>{" · /sessions"}</text> : null}
             <box flexGrow={1} />
             <text fg={t.textDim}>{`v${startupConfig.version}`}</text>
           </box>
@@ -5060,6 +5146,7 @@ function SlashMenuModal({
   const panelHeight = Math.min(contentHeight, maxH);
   const top = bottomAlignedModalTop(height, panelHeight);
   const overlayBg = "#000000cc" as string;
+  const panelWidth = Math.max(12, Math.min(64, width - 4));
   return (
     <box
       position="absolute"
@@ -5072,7 +5159,7 @@ function SlashMenuModal({
       backgroundColor={overlayBg}
     >
       <box
-        width={Math.min(50, width - 6)}
+        width={panelWidth}
         height={panelHeight}
         backgroundColor={t.backgroundPanel}
         paddingTop={1}
@@ -5089,23 +5176,29 @@ function SlashMenuModal({
           <text fg={t.text}>{searchQuery || <span style={{ fg: t.textMuted }}>{"Search..."}</span>}</text>
         </box>
         <scrollbox ref={listRef} flexGrow={1} minHeight={0}>
-          {filteredItems.map((item, idx) => (
-            <box
-              key={item.id}
-              id={`slash-${item.id}`}
-              backgroundColor={idx === selectedIndex ? t.selectedBg : undefined}
-              paddingLeft={2}
-              paddingRight={2}
-            >
-              <box flexDirection="row" justifyContent="space-between">
-                <text fg={idx === selectedIndex ? t.selected : t.text}>
-                  {"/"}
-                  {item.label}
-                </text>
-                <text fg={t.textMuted}>{item.description}</text>
+          {filteredItems.map((item, idx) => {
+            const row = formatSlashMenuRow(item, panelWidth);
+            return (
+              <box
+                key={item.id}
+                id={`slash-${item.id}`}
+                backgroundColor={idx === selectedIndex ? t.selectedBg : undefined}
+                paddingLeft={2}
+                paddingRight={2}
+                width="100%"
+              >
+                <box flexDirection="row" width="100%">
+                  <text fg={idx === selectedIndex ? t.selected : t.text}>{row.label}</text>
+                  {row.description ? (
+                    <>
+                      <box flexGrow={1} />
+                      <text fg={t.textMuted}>{row.description}</text>
+                    </>
+                  ) : null}
+                </box>
               </box>
-            </box>
-          ))}
+            );
+          })}
           {filteredItems.length === 0 && (
             <box paddingLeft={2}>
               <text fg={t.textMuted}>{"No commands match your search"}</text>

@@ -43,10 +43,14 @@ import { createProvider as createProviderFromKind, type GrokProviderAdapter } fr
 import {
   appendCompaction,
   appendMessages,
+  appendSideQuestion,
   appendSystemMessage,
   buildChatEntries,
+  buildSideQuestionEntries,
+  formatSideQuestionHistory,
   getNextMessageSequence,
   getSessionTotalTokens,
+  listSideQuestions,
   loadTranscript,
   loadTranscriptState,
   recordUsageEvent,
@@ -60,6 +64,7 @@ import type {
   Plan,
   SessionInfo,
   SessionSnapshot,
+  SideQuestionEntry,
   StreamChunk,
   SubagentStatus,
   TaskRequest,
@@ -119,6 +124,19 @@ export interface ProcessMessageUsage {
   outputTokens?: number;
   totalTokens?: number;
   costUsdTicks?: number;
+}
+
+function mergeChatEntries(primary: ChatEntry[], sideEntries: ChatEntry[]): ChatEntry[] {
+  if (sideEntries.length === 0) return primary;
+  return [
+    ...primary.map((entry, index) => ({ entry, sourceOrder: 0, index })),
+    ...sideEntries.map((entry, index) => ({ entry, sourceOrder: 1, index })),
+  ]
+    .sort(
+      (a, b) =>
+        a.entry.timestamp.getTime() - b.entry.timestamp.getTime() || a.sourceOrder - b.sourceOrder || a.index - b.index,
+    )
+    .map(({ entry }) => entry);
 }
 
 export interface ProcessMessageStepStart {
@@ -770,7 +788,9 @@ export class Agent {
 
   async askSideQuestion(question: string, signal?: AbortSignal): Promise<SideQuestionResult> {
     if (!this.provider) {
-      return { response: "No API key configured." };
+      const result = { response: "No API key configured." };
+      this.persistSideQuestion(question, { answer: result.response });
+      return result;
     }
 
     const contextParts: string[] = [];
@@ -794,9 +814,18 @@ export class Agent {
     }
     const conversationContext = contextParts.join("\n\n");
 
-    const result = await runSideQuestion(question, this.provider, this.modelId, conversationContext, signal);
-    this.recordUsage(result.usage, "other");
-    return result;
+    try {
+      const result = await runSideQuestion(question, this.provider, this.modelId, conversationContext, signal);
+      this.recordUsage(result.usage, "other");
+      this.persistSideQuestion(question, { answer: result.response });
+      return result;
+    } catch (err) {
+      if (signal?.aborted) {
+        throw err;
+      }
+      this.persistSideQuestion(question, { error: err instanceof Error ? err.message : String(err) });
+      throw err;
+    }
   }
 
   abort(): void {
@@ -825,6 +854,43 @@ export class Agent {
 
   clearHistory(): void {
     this.startNewSession();
+  }
+
+  listSessions(limit = 10): SessionInfo[] {
+    if (!this.sessionStore) return [];
+    return this.sessionStore.listRecentSessions(limit);
+  }
+
+  listSideQuestions(limit = 50): SideQuestionEntry[] {
+    if (!this.session) return [];
+    return listSideQuestions(this.session.id, limit);
+  }
+
+  formatSideQuestionHistory(limit = 20): string {
+    return formatSideQuestionHistory(this.listSideQuestions(limit));
+  }
+
+  resumeSession(selector: string): SessionSnapshot | null {
+    if (this.sessionStartHookFired) {
+      const endInput: SessionEndHookInput = {
+        hook_event_name: "SessionEnd",
+        session_id: this.session?.id,
+        cwd: this.bash.getCwd(),
+      };
+      this.fireHook(endInput).catch(() => {});
+      this.sessionStartHookFired = false;
+    }
+
+    this.sessionStore = new SessionStore(this.bash.getCwd());
+    this.workspace = this.sessionStore.getWorkspace();
+    this.session = this.sessionStore.openSession(selector, this.modelId, this.mode, this.bash.getCwd());
+    this.mode = this.session.mode;
+    const transcript = loadTranscriptState(this.session.id);
+    this.messages = transcript.messages;
+    this.messageSeqs = transcript.seqs;
+    this.sessionStore.setModel(this.session.id, this.modelId);
+    this.session = this.sessionStore.getRequiredSession(this.session.id);
+    return this.getSessionSnapshot();
   }
 
   startNewSession(): SessionSnapshot | null {
@@ -866,7 +932,7 @@ export class Agent {
 
   getChatEntries(): ChatEntry[] {
     if (!this.session) return [];
-    return buildChatEntries(this.session.id);
+    return mergeChatEntries(buildChatEntries(this.session.id), buildSideQuestionEntries(this.session.id));
   }
 
   getSessionSnapshot(): SessionSnapshot | null {
@@ -875,9 +941,21 @@ export class Agent {
       workspace: this.workspace,
       session: this.session,
       messages: loadTranscript(this.session.id),
-      entries: buildChatEntries(this.session.id),
+      entries: this.getChatEntries(),
       totalTokens: getSessionTotalTokens(this.session.id),
     };
+  }
+
+  private persistSideQuestion(question: string, result: { answer?: string; error?: string }): void {
+    if (!this.session) return;
+    appendSideQuestion(this.session.id, {
+      question,
+      answer: result.answer ?? null,
+      error: result.error ?? null,
+      model: this.modelId,
+    });
+    this.sessionStore?.touchSession(this.session.id, this.bash.getCwd());
+    this.session = this.sessionStore?.getRequiredSession(this.session.id) ?? this.session;
   }
 
   onSubagentStatus(listener: (status: SubagentStatus | null) => void): () => void {
