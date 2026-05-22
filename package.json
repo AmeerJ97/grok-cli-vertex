@@ -48,16 +48,16 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.42",
+    "@ai-sdk/mcp": "^1.0.43",
     "@ai-sdk/provider-utils": "^4.0.27",
     "@ai-sdk/xai": "^3.0.91",
     "@coinbase/agentkit": "^0.10.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@npmcli/arborist": "^9.5.0",
-    "@opentui/core": "^0.2.14",
-    "@opentui/react": "^0.2.14",
-    "agent-desktop": "^0.1.14",
-    "ai": "^6.0.185",
+    "@npmcli/arborist": "^9.6.0",
+    "@opentui/core": "^0.2.15",
+    "@opentui/react": "^0.2.15",
+    "agent-desktop": "^0.2.0",
+    "ai": "^6.0.190",
     "commander": "^14.0.3",
     "diff": "^9.0.0",
     "dotenv": "^17.4.2",
@@ -65,7 +65,7 @@
     "grammy": "^1.43.0",
     "react": "^19.2.6",
     "ripgrep": "^0.3.1",
-    "semver": "^7.8.0",
+    "semver": "^7.8.1",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageserver-types": "^3.17.5",
     "zod": "^4.4.3"
@@ -80,7 +80,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.0.5",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.7"
   },
   "engines": {
     "node": ">=18.0.0"
