@@ -32,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/insta
 bun install
 bun run build
 mkdir -p ~/.local/bin
-printf '#!/usr/bin/env bash\nexec %s/dist/index.js "$@"\n' "$PWD" > ~/.local/bin/grok
+printf '#!/usr/bin/env bash\nexec %q/dist/index.js "$@"\n' "$PWD" > ~/.local/bin/grok
 chmod +x ~/.local/bin/grok
 ```
 
@@ -455,8 +455,9 @@ The install script bundles Bun, but if you want to use your own:
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
-bun install
-bun run build
+export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+export PATH="$BUN_INSTALL/bin:$PATH"
+curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
 ```
 
 ### API key issues

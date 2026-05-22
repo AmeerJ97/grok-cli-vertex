@@ -13,7 +13,7 @@ export function getAuthPromptConfig(provider: ProviderKind, vertexProjectId?: st
       title: "Configure Vertex AI",
       message: vertexProjectId
         ? "Vertex AI is selected and a project id is configured. Authenticate with Google Application Default Credentials, then retry."
-        : "Vertex AI is selected but no project id is configured. Set GROK_VERTEX_PROJECT_ID or save vertex.projectId in ~/.grok/user-settings.json.",
+        : "Vertex AI is selected but no project id is configured. Set GROK_VERTEX_PROJECT_ID or GCP_PROJECT_ID, or save vertex.projectId in ~/.grok/user-settings.json.",
       placeholder: "GROK_VERTEX_PROJECT_ID=...",
       canSaveApiKey: false,
     };

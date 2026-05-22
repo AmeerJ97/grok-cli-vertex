@@ -644,7 +644,11 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
   const [sessionRecap, setSessionRecap] = useState<string | null>(() => agent.getSessionRecap());
   const [showApiKeyModal, setShowApiKeyModal] = useState(() => !initialHasApiKey);
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
-  const authPrompt = getAuthPromptConfig(getActiveProvider(), resolveVertexSettings().projectId);
+  const authPrompt = useMemo(() => {
+    const provider = getActiveProvider();
+    const vertexProjectId = provider === "vertex" ? resolveVertexSettings().projectId : undefined;
+    return getAuthPromptConfig(provider, vertexProjectId);
+  }, []);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
   const [slashSearchQuery, setSlashSearchQuery] = useState("");

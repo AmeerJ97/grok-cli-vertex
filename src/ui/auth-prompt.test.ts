@@ -17,4 +17,8 @@ describe("getAuthPromptConfig", () => {
       canSaveApiKey: false,
     });
   });
+
+  it("documents both supported Vertex project environment variables", () => {
+    expect(getAuthPromptConfig("vertex").message).toContain("GCP_PROJECT_ID");
+  });
 });
