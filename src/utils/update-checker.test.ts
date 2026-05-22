@@ -7,8 +7,12 @@ const getScriptInstallContextMock = vi.hoisted(() =>
     metadata: { version: "1.0.0" },
   })),
 );
+const runScriptManagedUpdateMock = vi.hoisted(() =>
+  vi.fn(async () => ({ success: false, output: "No matching release found for this platform." })),
+);
 
 beforeEach(() => {
+  vi.resetModules();
   vi.stubGlobal("fetch", vi.fn());
   isCurrentScriptManagedInstallMock.mockReset();
   isCurrentScriptManagedInstallMock.mockReturnValue(true);
@@ -16,12 +20,18 @@ beforeEach(() => {
   getScriptInstallContextMock.mockReturnValue({
     metadata: { version: "1.0.0" },
   });
+  runScriptManagedUpdateMock.mockReset();
+  runScriptManagedUpdateMock.mockResolvedValue({
+    success: false,
+    output: "No matching release found for this platform.",
+  });
   vi.doMock("./install-manager", async () => {
     const actual = await vi.importActual<typeof import("./install-manager")>("./install-manager");
     return {
       ...actual,
       getScriptInstallContext: getScriptInstallContextMock,
       isCurrentScriptManagedInstall: isCurrentScriptManagedInstallMock,
+      runScriptManagedUpdate: runScriptManagedUpdateMock,
     };
   });
 });
@@ -223,15 +233,7 @@ describe("runUpdate", () => {
   });
 
   it("returns success when the script-managed updater succeeds", async () => {
-    vi.doMock("./install-manager", async () => {
-      const actual = await vi.importActual<typeof import("./install-manager")>("./install-manager");
-      return {
-        ...actual,
-        getScriptInstallContext: getScriptInstallContextMock,
-        isCurrentScriptManagedInstall: isCurrentScriptManagedInstallMock,
-        runScriptManagedUpdate: vi.fn().mockResolvedValue({ success: true, output: "Updated to Grok 2.0.0." }),
-      };
-    });
+    runScriptManagedUpdateMock.mockResolvedValue({ success: true, output: "Updated to Grok 2.0.0." });
 
     const { runUpdate } = await importModule();
     const result = await runUpdate("1.0.0");
@@ -241,15 +243,7 @@ describe("runUpdate", () => {
   });
 
   it("returns failure when the script-managed updater fails", async () => {
-    vi.doMock("./install-manager", async () => {
-      const actual = await vi.importActual<typeof import("./install-manager")>("./install-manager");
-      return {
-        ...actual,
-        getScriptInstallContext: getScriptInstallContextMock,
-        isCurrentScriptManagedInstall: isCurrentScriptManagedInstallMock,
-        runScriptManagedUpdate: vi.fn().mockResolvedValue({ success: false, output: "permission denied" }),
-      };
-    });
+    runScriptManagedUpdateMock.mockResolvedValue({ success: false, output: "permission denied" });
 
     const { runUpdate } = await importModule();
     const result = await runUpdate("1.0.0");

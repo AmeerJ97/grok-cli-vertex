@@ -15,6 +15,7 @@ See `README.md` and `docs/` for user-facing and maintainer documentation.
 | ------------- | --------------------------------------------------------------------- |
 | Install deps  | `bun install` (installs Husky; pre-commit runs Biome on staged files) |
 | Typecheck     | `bun run typecheck`                                                   |
+| Test          | `bun run test`                                                        |
 | Build         | `bun run build`                                                       |
 | Run built CLI | `./dist/index.js`                                                     |
 | Headless mode | `./dist/index.js --prompt "..." --max-tool-rounds N`                  |
@@ -23,9 +24,6 @@ See `README.md` and `docs/` for user-facing and maintainer documentation.
 
 ### Known issues
 
-- The full Vitest suite is not yet a required CI gate. Use targeted tests for
-  touched behavior and keep `bun run typecheck` plus CI checks as the baseline
-  merge gate until the full-suite failures are resolved.
 - Vertex mode does not support inherited xAI-only capabilities such as batch,
   hosted search, media generation, and Telegram STT. These should fail through
   typed provider capability errors.

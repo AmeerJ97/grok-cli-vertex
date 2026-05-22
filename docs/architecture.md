@@ -104,10 +104,6 @@ Current required CI gates are:
 - `bun run format`
 - `bun run lint`
 - `bun run typecheck`
+- `bun run test`
 - `bun run build:binary`
 - dependency lifecycle audit and secret scanning in the security workflow
-
-The broader Vitest suite exists, but it is not currently a required CI gate.
-As of this cleanup pass, a local full-suite run reports 50 passing test files
-and 6 failing files. Do not add the full suite to required CI until the failing
-provider/tool-schema and environment-dependent tests are addressed.
