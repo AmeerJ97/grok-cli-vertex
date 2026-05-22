@@ -12,6 +12,13 @@ This is a standalone fork of `grok-cli` focused on making **Google Cloud Vertex 
 
 Some native xAI paths remain because they are inherited from upstream and useful for compatibility, comparison, or fallback. They are not the main product focus of this fork.
 
+## Repository guide
+
+- [Architecture](docs/architecture.md) — system shape, provider boundary, runtime modes, and current quality gates.
+- [Demo script](docs/demo-script.md) — a short walkthrough for showing the project without exposing private credentials.
+- [Maintainer runbook](docs/maintainer-runbook.md) — local checks, PR policy, release flow, and troubleshooting.
+- [Roadmap](docs/roadmap.md) — near-term hardening work and explicit non-goals.
+
 ## Upstream attribution
 
 This project started as a fork of the open-source `grok-cli` codebase. This repo
@@ -92,6 +99,8 @@ grok --verify
 `--batch-api` is inherited from the native xAI backend and is not available on
 Vertex. In Vertex mode, the CLI returns a typed capability error instead of
 pretending the endpoint exists.
+
+For a reproducible walkthrough, see [docs/demo-script.md](docs/demo-script.md).
 
 **Continue a saved session:**
 
