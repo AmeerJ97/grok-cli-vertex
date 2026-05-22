@@ -26,11 +26,19 @@ official distribution of the upstream project.
 curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
 ```
 
-**Alternative install** (requires Bun on PATH; package name is still inherited):
+**Local source install** (requires Bun on PATH):
 
 ```bash
-bun add -g grok-dev
+bun install
+bun run build
+mkdir -p ~/.local/bin
+printf '#!/usr/bin/env bash\nexec %s/dist/index.js "$@"\n' "$PWD" > ~/.local/bin/grok
+chmod +x ~/.local/bin/grok
 ```
+
+Do not use `npm install -g grok-dev` or `bun add -g grok-dev` for this Vertex
+fork unless the published package is explicitly owned by this repository. The
+inherited npm package can be xAI-only and may ignore saved Vertex settings.
 
 **Self-management** (script-installed only):
 
@@ -447,7 +455,8 @@ The install script bundles Bun, but if you want to use your own:
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
-bun add -g grok-dev
+bun install
+bun run build
 ```
 
 ### API key issues
