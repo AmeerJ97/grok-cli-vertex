@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+import * as z from "zod";
 import { toolSetToBatchTools } from "./tool-schemas";
 
 describe("toolSetToBatchTools", () => {

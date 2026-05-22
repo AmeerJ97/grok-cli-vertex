@@ -88,7 +88,5 @@ shape instead:
 - Unsupported Vertex features fail intentionally through typed capability
   errors.
 - Headless JSONL output makes the CLI usable in scripts and review workflows.
-- The repo has required CI, security scanning, Dependabot grouping, release
-  binaries, and install/update/uninstall paths.
-- The current full Vitest suite is not yet a required gate; be explicit about
-  that if asked.
+- The repo has required tests, CI, security scanning, Dependabot grouping,
+  release binaries, and install/update/uninstall paths.
