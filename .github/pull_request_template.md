@@ -9,6 +9,8 @@
 ## Verification
 
 - [ ] `bun run typecheck`
+- [ ] `bun run lint`
+- [ ] `bun run build:binary`
 - [ ] Relevant tests:
 - [ ] Manual smoke, if applicable:
 
@@ -16,10 +18,14 @@
 
 -
 
+## Docs / config impact
+
+- [ ] README, CLI help, or docs updated if behavior changed
+- [ ] GitHub workflow/config changes called out explicitly, if any
+
 Fixes #
 
 ## Checklist
 
 - [ ] Scope is focused and unrelated changes are excluded
-- [ ] Public docs or CLI help were updated if behavior changed
 - [ ] CI-relevant checks were run locally or are expected to run in GitHub Actions

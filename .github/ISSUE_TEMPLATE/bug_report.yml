@@ -1,24 +1,58 @@
-name: Bug Report
-description: File a bug report
-title: "[Bug]: "
-labels: ["bug"]
+name: Bug report
+description: Report reproducible CLI, provider, install, or documentation behavior.
+title: "[bug]: "
+labels:
+  - bug
 body:
   - type: textarea
-    id: description
+    id: summary
     attributes:
-      label: Bug Description
-      description: Describe what happened and what you expected
-      placeholder: What went wrong?
+      label: Summary
+      description: What happened, and what did you expect instead?
     validations:
       required: true
-
-  - type: textarea
-    id: steps
+  - type: dropdown
+    id: area
     attributes:
-      label: Steps to reproduce
-      placeholder: |
-        1. 
-        2. 
-        3. 
+      label: Area
+      options:
+        - Vertex provider
+        - Native xAI fallback
+        - CLI / TUI
+        - Headless / JSON output
+        - Install / update / uninstall
+        - Telegram / remote control
+        - Sandbox / verification
+        - Documentation
+        - Other
     validations:
-      required: false
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands, flags, provider settings, and whether credentials are required.
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, terminal, Bun version, provider, and relevant non-secret env vars.
+      placeholder: |
+        OS:
+        Terminal:
+        Bun:
+        Provider:
+        GROK_VERTEX_LOCATION:
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste relevant output. Do not include API keys, tokens, or private project data.
+      render: shell
