@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from "./db";
 
 const LATEST_DB_VERSION = 4;
+const SESSION_RECAP_DB_VERSION = 3;
 
 export function applyMigrations(db: SQLiteDatabase): void {
   const version = Number(db.pragma("user_version", { simple: true })) || 0;
@@ -14,9 +15,9 @@ export function applyMigrations(db: SQLiteDatabase): void {
       createCompactionSchema(db);
       db.pragma("user_version = 2");
     }
-    if (version < LATEST_DB_VERSION) {
+    if (version < SESSION_RECAP_DB_VERSION) {
       createSessionRecapSchema(db);
-      db.pragma("user_version = 3");
+      db.pragma(`user_version = ${SESSION_RECAP_DB_VERSION}`);
     }
     if (version < 4) {
       createSideQuestionSchema(db);

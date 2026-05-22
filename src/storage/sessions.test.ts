@@ -83,20 +83,26 @@ describe("SessionStore recap persistence", () => {
     expect(resumed.cwdLast).toBe(resumedCwd);
   });
 
-  it("lists recent sessions for the current workspace", async () => {
+  it("lists recent sessions for the current workspace", () => {
     const workspaceRoot = fs.mkdtempSync(path.join(tempRoot, "grok-session-workspace-"));
     const cwd = path.join(workspaceRoot, "repo");
     fs.mkdirSync(path.join(workspaceRoot, ".git"), { recursive: true });
     fs.mkdirSync(cwd, { recursive: true });
     tempDirs.push(workspaceRoot);
 
-    const store = new SessionStore(cwd);
-    const first = store.createSession("grok-4.3", "agent", cwd);
-    await new Promise((resolve) => setTimeout(resolve, 2));
-    const second = store.createSession("grok-4.3", "agent", cwd);
-    await new Promise((resolve) => setTimeout(resolve, 2));
-    store.touchSession(first.id, cwd);
+    vi.useFakeTimers();
+    try {
+      const store = new SessionStore(cwd);
+      vi.setSystemTime(new Date("2026-04-22T15:00:00.000Z"));
+      const first = store.createSession("grok-4.3", "agent", cwd);
+      vi.setSystemTime(new Date("2026-04-22T15:00:01.000Z"));
+      const second = store.createSession("grok-4.3", "agent", cwd);
+      vi.setSystemTime(new Date("2026-04-22T15:00:02.000Z"));
+      store.touchSession(first.id, cwd);
 
-    expect(store.listRecentSessions(2).map((session) => session.id)).toEqual([first.id, second.id]);
+      expect(store.listRecentSessions(2).map((session) => session.id)).toEqual([first.id, second.id]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

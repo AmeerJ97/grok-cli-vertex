@@ -1,5 +1,5 @@
 import type { ChatEntry, SideQuestionEntry } from "../types/index";
-import { getDatabase } from "./db";
+import { getDatabase, withTransaction } from "./db";
 
 interface SideQuestionRow {
   id: number;
@@ -20,22 +20,24 @@ export interface AppendSideQuestionInput {
 
 export function appendSideQuestion(sessionId: string, input: AppendSideQuestionInput): SideQuestionEntry {
   const createdAt = new Date().toISOString();
-  const result = getDatabase()
-    .prepare(`
-      INSERT INTO side_questions (session_id, question, answer_text, error_text, model, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `)
-    .run(sessionId, input.question, input.answer ?? null, input.error ?? null, input.model, createdAt) as {
-    lastInsertRowid?: number | bigint;
-  };
+  const result = withTransaction((db) => {
+    const insert = db
+      .prepare(`
+        INSERT INTO side_questions (session_id, question, answer_text, error_text, model, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+      .run(sessionId, input.question, input.answer ?? null, input.error ?? null, input.model, createdAt) as {
+      lastInsertRowid?: number | bigint;
+    };
 
-  getDatabase()
-    .prepare(`
-      UPDATE sessions
-      SET updated_at = ?
-      WHERE id = ?
-    `)
-    .run(createdAt, sessionId);
+    db.prepare(`
+        UPDATE sessions
+        SET updated_at = ?
+        WHERE id = ?
+      `).run(createdAt, sessionId);
+
+    return insert;
+  });
 
   return {
     id: Number(result.lastInsertRowid ?? 0),

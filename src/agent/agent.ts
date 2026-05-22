@@ -128,7 +128,15 @@ export interface ProcessMessageUsage {
 
 function mergeChatEntries(primary: ChatEntry[], sideEntries: ChatEntry[]): ChatEntry[] {
   if (sideEntries.length === 0) return primary;
-  return [...primary, ...sideEntries].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  return [
+    ...primary.map((entry, index) => ({ entry, sourceOrder: 0, index })),
+    ...sideEntries.map((entry, index) => ({ entry, sourceOrder: 1, index })),
+  ]
+    .sort(
+      (a, b) =>
+        a.entry.timestamp.getTime() - b.entry.timestamp.getTime() || a.sourceOrder - b.sourceOrder || a.index - b.index,
+    )
+    .map(({ entry }) => entry);
 }
 
 export interface ProcessMessageStepStart {

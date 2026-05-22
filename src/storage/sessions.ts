@@ -82,7 +82,7 @@ export class SessionStore {
       SELECT id, workspace_id, title, recap_text, recap_model, recap_updated_at, model, mode, cwd_at_start, cwd_last, status, created_at, updated_at
       FROM sessions
       WHERE workspace_id = ?
-      ORDER BY updated_at DESC
+      ORDER BY updated_at DESC, id DESC
       LIMIT 1
     `)
       .get(this.workspace.id) as SessionRow | undefined;
@@ -96,7 +96,7 @@ export class SessionStore {
       SELECT id, workspace_id, title, recap_text, recap_model, recap_updated_at, model, mode, cwd_at_start, cwd_last, status, created_at, updated_at
       FROM sessions
       WHERE workspace_id = ?
-      ORDER BY updated_at DESC
+      ORDER BY updated_at DESC, id DESC
       LIMIT ?
     `)
       .all(this.workspace.id, limit) as SessionRow[];
