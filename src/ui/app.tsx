@@ -39,6 +39,7 @@ import { FileIndex } from "../utils/file-index.js";
 import { copyTextToHostClipboard } from "../utils/host-clipboard";
 import {
   type CustomSubagentConfig,
+  getActiveProvider,
   getApiKey,
   getTelegramBotToken,
   isReservedSubagentName,
@@ -50,6 +51,7 @@ import {
   type McpServerConfig,
   type PaymentChain,
   type PaymentSettings,
+  resolveVertexSettings,
   type SandboxMode,
   type SandboxSettings,
   saveApprovedTelegramUserId,
@@ -69,6 +71,7 @@ import {
   SubagentEditorModal,
   SubagentsBrowserModal,
 } from "./agents-modal";
+import { getAuthPromptConfig } from "./auth-prompt";
 import { BtwOverlay, type BtwState } from "./components/btw-overlay.js";
 import { SuggestionOverlay } from "./components/SuggestionOverlay.js";
 import { type TypeaheadState, useTypeahead } from "./hooks/useTypeahead.js";
@@ -665,6 +668,11 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
   const [sessionRecap, setSessionRecap] = useState<string | null>(() => agent.getSessionRecap());
   const [showApiKeyModal, setShowApiKeyModal] = useState(() => !initialHasApiKey);
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const authPrompt = useMemo(() => {
+    const provider = getActiveProvider();
+    const vertexProjectId = provider === "vertex" ? resolveVertexSettings().projectId : undefined;
+    return getAuthPromptConfig(provider, vertexProjectId);
+  }, []);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
   const [slashSearchQuery, setSlashSearchQuery] = useState("");
@@ -1795,6 +1803,10 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
   }, []);
 
   const submitApiKey = useCallback(() => {
+    if (!authPrompt.canSaveApiKey) {
+      setApiKeyError(authPrompt.message);
+      return;
+    }
     const apiKey = (apiKeyInputRef.current?.plainText || "").trim();
     if (!apiKey) {
       setApiKeyError("Enter an API key to continue.");
@@ -1816,7 +1828,7 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
     if (getTelegramBotToken()) {
       startTelegramBridge();
     }
-  }, [agent, startTelegramBridge]);
+  }, [agent, authPrompt, startTelegramBridge]);
 
   useEffect(() => {
     hasApiKeyRef.current = hasApiKey;
@@ -3696,6 +3708,7 @@ export function App({ agent, startupConfig, initialMessage, onExit }: AppProps) 
           t={t}
           width={width}
           height={height}
+          config={authPrompt}
           inputRef={apiKeyInputRef}
           error={apiKeyError}
           onSubmit={submitApiKey}
@@ -4213,6 +4226,7 @@ function ApiKeyModal({
   t,
   width,
   height,
+  config,
   inputRef,
   error,
   onSubmit,
@@ -4220,6 +4234,7 @@ function ApiKeyModal({
   t: Theme;
   width: number;
   height: number;
+  config: ReturnType<typeof getAuthPromptConfig>;
   inputRef: React.RefObject<TextareaRenderable | null>;
   error: string | null;
   onSubmit: () => void;
@@ -4250,34 +4265,41 @@ function ApiKeyModal({
       >
         <box flexShrink={0} flexDirection="row" justifyContent="space-between" paddingLeft={2} paddingRight={2}>
           <text fg={t.primary}>
-            <b>{"Add API key"}</b>
+            <b>{config.title}</b>
           </text>
           <text fg={t.textMuted}>{"esc"}</text>
         </box>
         <box paddingLeft={2} paddingRight={2} paddingTop={1}>
-          <text fg={t.text}>{"Paste your xAI API key to unlock chat. You can hide this prompt with esc."}</text>
+          <text fg={t.text}>{config.message}</text>
         </box>
-        <box paddingLeft={2} paddingRight={2} paddingTop={1}>
-          <box backgroundColor={t.backgroundElement} paddingLeft={1} paddingRight={1} width="100%">
-            <textarea
-              ref={inputRef}
-              focused={true}
-              placeholder="xai-..."
-              textColor={t.text}
-              backgroundColor={t.backgroundElement}
-              placeholderColor={t.textMuted}
-              minHeight={1}
-              maxHeight={3}
-              wrapMode="word"
-              keyBindings={TEXTAREA_KEYBINDINGS}
-              onSubmit={onSubmit as unknown as () => void}
-            />
+        {config.canSaveApiKey ? (
+          <box paddingLeft={2} paddingRight={2} paddingTop={1}>
+            <box backgroundColor={t.backgroundElement} paddingLeft={1} paddingRight={1} width="100%">
+              <textarea
+                ref={inputRef}
+                focused={true}
+                placeholder={config.placeholder}
+                textColor={t.text}
+                backgroundColor={t.backgroundElement}
+                placeholderColor={t.textMuted}
+                minHeight={1}
+                maxHeight={3}
+                wrapMode="word"
+                keyBindings={TEXTAREA_KEYBINDINGS}
+                onSubmit={onSubmit as unknown as () => void}
+              />
+            </box>
           </box>
-        </box>
+        ) : null}
         <box flexGrow={1} minHeight={0} />
         <box paddingLeft={2} paddingRight={2} paddingTop={2} paddingBottom={1}>
           {error ? (
             <text fg={t.diffRemovedFg}>{error}</text>
+          ) : !config.canSaveApiKey ? (
+            <text>
+              <span style={{ fg: t.primary }}>{"esc "}</span>
+              <span style={{ fg: t.textMuted }}>{"hide"}</span>
+            </text>
           ) : (
             <text>
               <span style={{ fg: t.primary }}>{"enter "}</span>
