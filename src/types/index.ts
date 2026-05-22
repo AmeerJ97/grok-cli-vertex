@@ -274,6 +274,16 @@ export interface SessionInfo {
   updatedAt: Date;
 }
 
+export interface SideQuestionEntry {
+  id: number;
+  sessionId: string;
+  question: string;
+  answer: string | null;
+  error: string | null;
+  model: string;
+  createdAt: Date;
+}
+
 export interface UsageEvent {
   id: number;
   sessionId: string;
