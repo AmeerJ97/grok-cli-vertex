@@ -7,8 +7,7 @@ repo hygiene so contributors can see what is important now versus later.
 
 - Finish the Vertex provider hardening work: install/auth UX, typed capability
   errors, model routing, and clear project-id prompts.
-- Resolve the current full-suite test failures so `bunx --bun vitest run` can
-  become a required CI gate.
+- Keep the full Vitest suite stable as a required CI gate.
 - Keep README and demo documentation aligned with the installed binary path,
   Vertex defaults, and native xAI fallback behavior.
 - Add targeted regression tests whenever provider capabilities, session

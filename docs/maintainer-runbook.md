@@ -12,6 +12,7 @@ bun install --frozen-lockfile
 bun run format
 bun run lint
 bun run typecheck
+bun run test
 bun run build:binary
 ```
 
@@ -21,15 +22,11 @@ For changes touching runtime behavior, also run targeted tests:
 bunx --bun vitest run path/to/file.test.ts
 ```
 
-The full suite is useful for discovery, but is not currently required for merge:
+The full suite is required for merge:
 
 ```bash
-bunx --bun vitest run
+bun run test
 ```
-
-Known current state: the full suite has failures in provider/tool-schema and
-environment-sensitive tests. Treat full-suite cleanup as a quality project
-before adding it to required CI.
 
 ## Pull Request Checklist
 

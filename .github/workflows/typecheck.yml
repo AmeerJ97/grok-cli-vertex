@@ -37,5 +37,8 @@ jobs:
       - name: Type check
         run: bun run typecheck
 
+      - name: Test
+        run: bun run test
+
       - name: Build standalone binary
         run: bun run build:binary

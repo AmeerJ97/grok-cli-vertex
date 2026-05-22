@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const originalProvider = process.env.GROK_PROVIDER;
+
 async function importAgentModuleWithBatchMocks() {
   vi.resetModules();
+  process.env.GROK_PROVIDER = "xai";
   vi.doMock("../storage/index", () => ({
     appendCompaction: vi.fn(),
     appendMessages: vi.fn(() => []),
@@ -72,6 +75,11 @@ async function importAgentModuleWithBatchMocks() {
 }
 
 afterEach(() => {
+  if (originalProvider === undefined) {
+    delete process.env.GROK_PROVIDER;
+  } else {
+    process.env.GROK_PROVIDER = originalProvider;
+  }
   vi.restoreAllMocks();
   vi.resetModules();
   vi.doUnmock("../storage/index");

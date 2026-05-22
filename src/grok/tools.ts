@@ -1,5 +1,5 @@
 import { generateText, type ToolSet, tool } from "ai";
-import { z } from "zod";
+import * as z from "zod";
 import { executePostToolFailureHooks, executePostToolHooks, executePreToolHooks } from "../hooks/index";
 import { isLspToolEnabled, queryLsp } from "../lsp/runtime";
 import { LSP_TOOL_OPERATIONS } from "../lsp/types";
