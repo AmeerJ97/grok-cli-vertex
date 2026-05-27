@@ -40,6 +40,8 @@ Before marking a PR ready:
 - Confirm Vertex-specific behavior uses provider capabilities instead of
   hardcoded backend checks in random call sites.
 - Confirm xAI fallback behavior still works when compatibility code is touched.
+- Confirm security-sensitive changes are routed through `SECURITY.md` guidance
+  instead of public issue details.
 
 ## Merge Policy
 
@@ -53,6 +55,20 @@ on `main`. Maintainers can merge once:
 
 Dependabot PRs can be merged when CI and security checks pass and the dependency
 scope is clear.
+
+## Public Repository Hygiene
+
+For public maintenance branches, keep the public-facing project surfaces aligned:
+
+- README links to architecture, roadmap, contributing, security, and the public
+  repo audit.
+- `package.json` includes repository, issue tracker, and homepage metadata.
+- `SECURITY.md` points reporters to private vulnerability reporting.
+- Merged PR branches may be pruned remotely; local branches with upstreams marked
+  `gone` should not be deleted unless the maintainer confirms they are no
+  longer useful.
+- New polish or maintenance work should start from current `main` on one focused
+  branch, not by replaying old local branches wholesale.
 
 ## Release Flow
 

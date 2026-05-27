@@ -1,8 +1,9 @@
 # grok-cli-vertex: a Vertex AI-focused Grok coding agent
 
-[CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
+[![CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml/badge.svg)](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
+[![Security Scan](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/security.yml/badge.svg)](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/security.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [npm package inherited from upstream](https://www.npmjs.com/package/grok-dev)
-[License: MIT](./LICENSE)
 [TypeScript](https://www.typescriptlang.org/)
 [Bun](https://bun.sh/)
 
@@ -18,6 +19,16 @@ Some native xAI paths remain because they are inherited from upstream and useful
 - [Demo script](docs/demo-script.md) — a short walkthrough for showing the project without exposing private credentials.
 - [Maintainer runbook](docs/maintainer-runbook.md) — local checks, PR policy, release flow, and troubleshooting.
 - [Roadmap](docs/roadmap.md) — near-term hardening work and explicit non-goals.
+- [Contributing](CONTRIBUTING.md) — local setup, PR expectations, provider-boundary guardrails, and issue triage.
+- [Security policy](SECURITY.md) — private vulnerability reporting and supported security scope.
+- [Public repo audit](docs/public-repo-audit.md) — current branch/repo hygiene notes and public polish follow-ups.
+
+## Project status
+
+This repository is public and early-maintainer-led. The default branch is kept
+Vertex-first, CI-verified, and dependency-monitored with Dependabot. Public
+issues are appropriate for reproducible bugs and focused feature requests;
+security-sensitive reports should use GitHub private vulnerability reporting.
 
 ## Upstream attribution
 
@@ -562,6 +573,9 @@ bun run dev      # run from source (Bun)
 bun run typecheck
 bun run lint
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full local setup, PR checklist,
+provider-boundary expectations, and issue-triage guidance.
 
 ---
 

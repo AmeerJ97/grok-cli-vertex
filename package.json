@@ -2,6 +2,14 @@
   "name": "grok-dev",
   "version": "1.1.6",
   "description": "A Vertex AI-focused Grok coding agent fork built with Bun and OpenTUI.",
+  "homepage": "https://github.com/AmeerJ97/grok-cli-vertex#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmeerJ97/grok-cli-vertex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AmeerJ97/grok-cli-vertex/issues"
+  },
   "type": "module",
   "main": "dist/index.js",
   "exports": {
@@ -37,9 +45,13 @@
     "cli",
     "agent",
     "grok",
+    "vertex-ai",
+    "google-cloud",
     "ai",
     "coding",
     "terminal",
+    "typescript",
+    "bun",
     "opentui"
   ],
   "author": "AmeerJ97",

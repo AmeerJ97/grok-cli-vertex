@@ -8,8 +8,10 @@
 
 ## Verification
 
+- [ ] `bun run format`
 - [ ] `bun run typecheck`
 - [ ] `bun run lint`
+- [ ] `bun run test`
 - [ ] `bun run build:binary`
 - [ ] Relevant tests:
 - [ ] Manual smoke, if applicable:
