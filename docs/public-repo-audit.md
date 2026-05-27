@@ -58,6 +58,9 @@ Completed in this branch:
   runbook.
 - Tightened GitHub templates so blank issues are disabled and the PR checklist
   matches the CI gate more closely.
+- Separated the script-managed Vertex fork install from the official x.ai CLI:
+  new installs use `grok-vertex` under `~/.grok-vertex/bin`, while legacy
+  script-managed metadata remains readable for update/uninstall compatibility.
 - Updated GitHub repository metadata: homepage, topics, wiki setting,
   vulnerability alerts, and private vulnerability reporting.
 

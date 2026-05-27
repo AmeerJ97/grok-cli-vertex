@@ -13,7 +13,7 @@ export const SCRIPT_INSTALL_METHOD = "script";
 
 const FETCH_TIMEOUT_MS = 5_000;
 const INSTALL_SCHEMA_VERSION = 1;
-const PATH_MARKER = "# grok";
+const PATH_MARKER = "# grok-cli-vertex";
 const CONFIG_FILENAMES = ["user-settings.json", "AGENTS.md"];
 const DATA_ENTRIES = ["daemon.pid", "delegations", "grok.db", "models", "schedules"];
 
@@ -41,6 +41,8 @@ export interface ScriptInstallContext {
   metadata: ScriptInstallMetadata;
   target: ReleaseTarget;
   binaryPath: string;
+  metadataPath: string;
+  userDir: string;
 }
 
 export interface ScriptUpdateRunResult {
@@ -81,26 +83,32 @@ export function getGrokUserDir(homeDir = os.homedir()): string {
   return path.join(homeDir, ".grok");
 }
 
+export function getGrokVertexInstallUserDir(homeDir = os.homedir()): string {
+  return path.join(homeDir, ".grok-vertex");
+}
+
 export function getScriptInstallDir(homeDir = os.homedir()): string {
-  return path.join(getGrokUserDir(homeDir), "bin");
+  return path.join(getGrokVertexInstallUserDir(homeDir), "bin");
 }
 
 export function getInstallMetadataPath(homeDir = os.homedir()): string {
-  return path.join(getGrokUserDir(homeDir), "install.json");
+  return path.join(getGrokVertexInstallUserDir(homeDir), "install.json");
 }
 
 export function getReleaseTargetForPlatform(platform = process.platform, arch = process.arch): ReleaseTarget | null {
   if (platform === "darwin" && (arch === "arm64" || arch === "x64"))
-    return { key: "darwin-arm64", assetName: "grok-darwin-arm64", binaryName: "grok" };
+    return { key: "darwin-arm64", assetName: "grok-darwin-arm64", binaryName: "grok-vertex" };
   if (platform === "linux" && arch === "x64")
-    return { key: "linux-x64", assetName: "grok-linux-x64", binaryName: "grok" };
+    return { key: "linux-x64", assetName: "grok-linux-x64", binaryName: "grok-vertex" };
   if (platform === "win32" && arch === "x64")
-    return { key: "windows-x64", assetName: "grok-windows-x64.exe", binaryName: "grok.exe" };
+    return { key: "windows-x64", assetName: "grok-windows-x64.exe", binaryName: "grok-vertex.exe" };
   return null;
 }
 
-export function loadScriptInstallMetadata(homeDir = os.homedir()): ScriptInstallMetadata | null {
-  const metadataPath = getInstallMetadataPath(homeDir);
+export function loadScriptInstallMetadata(
+  homeDir = os.homedir(),
+  metadataPath = getInstallMetadataPath(homeDir),
+): ScriptInstallMetadata | null {
   try {
     if (!fs.existsSync(metadataPath)) return null;
     const parsed = JSON.parse(fs.readFileSync(metadataPath, "utf8")) as Partial<ScriptInstallMetadata>;
@@ -136,9 +144,25 @@ export function saveScriptInstallMetadata(metadata: ScriptInstallMetadata, homeD
   fs.writeFileSync(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
 }
 
-export function getScriptInstallContext(homeDir = os.homedir()): ScriptInstallContext | null {
+export function getScriptInstallContext(
+  homeDir = os.homedir(),
+  executablePaths = getCurrentExecutablePaths(),
+): ScriptInstallContext | null {
   const target = getReleaseTargetForPlatform();
   if (!target) return null;
+
+  for (const metadataPath of getCandidateInstallMetadataPaths(homeDir, executablePaths)) {
+    const metadata = loadScriptInstallMetadata(homeDir, metadataPath);
+    if (!metadata) continue;
+    const userDir = path.dirname(metadataPath);
+    return {
+      metadata,
+      target: getReleaseTargetForPlatformKey(metadata.target) ?? target,
+      binaryPath: metadata.binaryPath,
+      metadataPath,
+      userDir,
+    };
+  }
 
   const metadata = loadScriptInstallMetadata(homeDir);
   if (metadata) {
@@ -146,6 +170,8 @@ export function getScriptInstallContext(homeDir = os.homedir()): ScriptInstallCo
       metadata,
       target: getReleaseTargetForPlatformKey(metadata.target) ?? target,
       binaryPath: metadata.binaryPath,
+      metadataPath: getInstallMetadataPath(homeDir),
+      userDir: getGrokVertexInstallUserDir(homeDir),
     };
   }
 
@@ -160,7 +186,7 @@ export function isCurrentScriptManagedInstall(
   homeDir = os.homedir(),
   executablePaths = getCurrentExecutablePaths(),
 ): boolean {
-  const context = getScriptInstallContext(homeDir);
+  const context = getScriptInstallContext(homeDir, executablePaths);
   if (!context) return false;
 
   const scriptBinaryPath = normalizeComparablePath(context.binaryPath);
@@ -247,7 +273,7 @@ export function buildScriptUninstallPlan(
   const context = getScriptInstallContext(homeDir);
   if (!context) return null;
 
-  const userDir = getGrokUserDir(homeDir);
+  const userDir = context.userDir;
   const removePaths = new Set<string>();
   const pruneDirs = new Set<string>();
 
@@ -255,10 +281,10 @@ export function buildScriptUninstallPlan(
     removePaths.add(userDir);
   } else {
     removePaths.add(context.binaryPath);
-    removePaths.add(getInstallMetadataPath(homeDir));
+    removePaths.add(context.metadataPath);
     if (!options.keepConfig) for (const f of CONFIG_FILENAMES) removePaths.add(path.join(userDir, f));
     if (!options.keepData) for (const e of DATA_ENTRIES) removePaths.add(path.join(userDir, e));
-    pruneDirs.add(getScriptInstallDir(homeDir));
+    pruneDirs.add(context.metadata.installDir);
     pruneDirs.add(userDir);
   }
 
@@ -318,16 +344,36 @@ function normalizeComparablePath(filePath: string): string {
 function getReleaseTargetForPlatformKey(key: string): ReleaseTarget | null {
   switch (key) {
     case "darwin-arm64":
-      return { key, assetName: "grok-darwin-arm64", binaryName: "grok" };
+      return { key, assetName: "grok-darwin-arm64", binaryName: "grok-vertex" };
     case "darwin-x64":
-      return { key: "darwin-arm64", assetName: "grok-darwin-arm64", binaryName: "grok" };
+      return { key: "darwin-arm64", assetName: "grok-darwin-arm64", binaryName: "grok-vertex" };
     case "linux-x64":
-      return { key, assetName: "grok-linux-x64", binaryName: "grok" };
+      return { key, assetName: "grok-linux-x64", binaryName: "grok-vertex" };
     case "windows-x64":
-      return { key, assetName: "grok-windows-x64.exe", binaryName: "grok.exe" };
+      return { key, assetName: "grok-windows-x64.exe", binaryName: "grok-vertex.exe" };
     default:
       return null;
   }
+}
+
+function getCandidateInstallMetadataPaths(homeDir: string, executablePaths: string[]): string[] {
+  const candidates = new Set<string>();
+
+  for (const executablePath of executablePaths) {
+    const normalized = path.resolve(executablePath);
+    const binDir = path.dirname(normalized);
+    if (path.basename(binDir) === "bin") {
+      candidates.add(path.join(path.dirname(binDir), "install.json"));
+    }
+  }
+
+  candidates.add(getInstallMetadataPath(homeDir));
+
+  // Legacy installs before this fork separated from the official x.ai CLI used
+  // ~/.grok/install.json. Keep reading it so existing users can still update or
+  // uninstall, but new installs go to ~/.grok-vertex.
+  candidates.add(path.join(getGrokUserDir(homeDir), "install.json"));
+  return [...candidates];
 }
 
 async function resolveReleaseDownload(target: ReleaseTarget): Promise<ReleaseDownload | null> {

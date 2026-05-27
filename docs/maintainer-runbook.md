@@ -81,8 +81,10 @@ Releases are produced by `.github/workflows/release.yml`.
 5. Confirm `checksums.txt` is present in the GitHub Release.
 
 Release artifacts are standalone binaries built with Bun. The install script
-should prefer release assets when available and should keep update/uninstall
-behavior script-managed.
+should prefer release assets when available, install the fork as `grok-vertex`
+under `~/.grok-vertex/bin`, and keep update/uninstall behavior script-managed.
+Do not reuse `~/.grok/bin/grok`; that path belongs to the official x.ai CLI
+installer and will cause PATH and metadata collisions.
 
 ## Troubleshooting
 

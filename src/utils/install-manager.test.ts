@@ -34,6 +34,8 @@ describe("getReleaseTargetForPlatform", () => {
     expect(getReleaseTargetForPlatform("darwin", "x64")?.assetName).toBe("grok-darwin-arm64");
     expect(getReleaseTargetForPlatform("linux", "x64")?.assetName).toBe("grok-linux-x64");
     expect(getReleaseTargetForPlatform("win32", "x64")?.assetName).toBe("grok-windows-x64.exe");
+    expect(getReleaseTargetForPlatform("linux", "x64")?.binaryName).toBe("grok-vertex");
+    expect(getReleaseTargetForPlatform("win32", "x64")?.binaryName).toBe("grok-vertex.exe");
     expect(getReleaseTargetForPlatform("linux", "arm64")).toBeNull();
   });
 });
@@ -110,6 +112,34 @@ describe("getScriptInstallContext", () => {
     const ctx = getScriptInstallContext(homeDir);
     expect(ctx?.metadata.installMethod).toBe("script");
     expect(ctx?.binaryPath).toBe(path.join(installDir, currentTarget!.binaryName));
+    expect(ctx?.userDir).toBe(path.join(homeDir, ".grok-vertex"));
+  });
+
+  it("can discover metadata from the active executable path", () => {
+    const homeDir = createTempDir("grok-ctx-exec-");
+    const installHome = path.join(homeDir, ".grok-vertex");
+    const installDir = path.join(installHome, "bin");
+    const currentTarget = getReleaseTargetForPlatform()!;
+    const binaryPath = path.join(installDir, currentTarget.binaryName);
+    fs.mkdirSync(installDir, { recursive: true });
+
+    saveScriptInstallMetadata(
+      {
+        schemaVersion: 1,
+        installMethod: "script" as const,
+        version: "1.2.3",
+        repo: GROK_GITHUB_REPO,
+        binaryPath,
+        installDir,
+        assetName: currentTarget.assetName,
+        target: currentTarget.key,
+        installedAt: "2026-04-03T00:00:00.000Z",
+      },
+      homeDir,
+    );
+
+    const ctx = getScriptInstallContext(homeDir, [binaryPath]);
+    expect(ctx?.metadataPath).toBe(path.join(installHome, "install.json"));
   });
 
   it("returns null when no metadata exists", () => {
@@ -173,7 +203,7 @@ describe("isCurrentScriptManagedInstall", () => {
 });
 
 describe("buildScriptUninstallPlan", () => {
-  it("removes the full ~/.grok directory by default", () => {
+  it("removes the full ~/.grok-vertex install directory by default", () => {
     const homeDir = createTempDir("grok-uninstall-");
     const installDir = getScriptInstallDir(homeDir);
     const currentTarget = getReleaseTargetForPlatform()!;
@@ -195,7 +225,7 @@ describe("buildScriptUninstallPlan", () => {
     );
 
     const plan = buildScriptUninstallPlan({}, homeDir);
-    expect(plan?.removePaths).toContain(path.join(homeDir, ".grok"));
+    expect(plan?.removePaths).toContain(path.join(homeDir, ".grok-vertex"));
   });
 
   it("keeps config and data when requested", () => {
@@ -220,7 +250,7 @@ describe("buildScriptUninstallPlan", () => {
     );
 
     const plan = buildScriptUninstallPlan({ keepConfig: true, keepData: true }, homeDir);
-    expect(plan?.removePaths).not.toContain(path.join(homeDir, ".grok"));
+    expect(plan?.removePaths).not.toContain(path.join(homeDir, ".grok-vertex"));
     expect(plan?.removePaths).toContain(path.join(installDir, currentTarget.binaryName));
   });
 });

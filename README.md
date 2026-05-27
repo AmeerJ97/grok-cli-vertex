@@ -44,14 +44,19 @@ official distribution of the upstream project.
 curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
 ```
 
+The script-installed command is `grok-vertex` and the binary is installed under
+`~/.grok-vertex/bin`. This intentionally avoids clobbering the official x.ai
+CLI installed by `curl -fsSL https://x.ai/cli/install.sh | bash`, which owns
+`~/.grok/bin/grok` and the `grok` command.
+
 **Local source install** (requires Bun on PATH):
 
 ```bash
 bun install
 bun run build
 mkdir -p ~/.local/bin
-printf '#!/usr/bin/env bash\nexec %q/dist/index.js "$@"\n' "$PWD" > ~/.local/bin/grok
-chmod +x ~/.local/bin/grok
+printf '#!/usr/bin/env bash\nexec %q/dist/index.js "$@"\n' "$PWD" > ~/.local/bin/grok-vertex
+chmod +x ~/.local/bin/grok-vertex
 ```
 
 Do not use `npm install -g grok-dev` or `bun add -g grok-dev` for this Vertex
@@ -61,10 +66,10 @@ inherited npm package can be xAI-only and may ignore saved Vertex settings.
 **Self-management** (script-installed only):
 
 ```bash
-grok update
-grok uninstall
-grok uninstall --dry-run
-grok uninstall --keep-config
+grok-vertex update
+grok-vertex uninstall
+grok-vertex uninstall --dry-run
+grok-vertex uninstall --keep-config
 ```
 
 **Prerequisites:** a Google Cloud project with Vertex AI enabled, Application Default Credentials for local auth, and a modern terminal emulator for the interactive OpenTUI experience. Native xAI mode still requires a **Grok API key** from [x.ai](https://x.ai). Headless `--prompt` mode does not depend on terminal UI support. If you want host desktop automation via the built-in computer sub-agent, also enable **Accessibility** permission for your terminal app on macOS.
@@ -76,8 +81,11 @@ grok uninstall --keep-config
 **Interactive (default)** — launches the OpenTUI coding agent:
 
 ```bash
-grok
+grok-vertex
 ```
+
+If you also use the official x.ai CLI, reserve `grok` for that CLI and use
+`grok-vertex` for this fork.
 
 ### Supported terminals
 
@@ -93,18 +101,18 @@ Other modern terminals may work, but these are the terminal apps we currently re
 **Pick a project directory:**
 
 ```bash
-grok -d /path/to/your/repo
+grok-vertex -d /path/to/your/repo
 ```
 
 **Headless** — one prompt, then exit (scripts, CI, automation):
 
 ```bash
-grok --prompt "run the test suite and summarize failures"
-grok -p "show me package.json" --directory /path/to/project
-grok --prompt "refactor X" --max-tool-rounds 30
-grok --prompt "summarize the repo state" --format json
-grok --prompt "review the repo overnight" --batch-api
-grok --verify
+grok-vertex --prompt "run the test suite and summarize failures"
+grok-vertex -p "show me package.json" --directory /path/to/project
+grok-vertex --prompt "refactor X" --max-tool-rounds 30
+grok-vertex --prompt "summarize the repo state" --format json
+grok-vertex --prompt "review the repo overnight" --batch-api
+grok-vertex --verify
 ```
 
 `--batch-api` is inherited from the native xAI backend and is not available on
@@ -116,8 +124,8 @@ For a reproducible walkthrough, see [docs/demo-script.md](docs/demo-script.md).
 **Continue a saved session:**
 
 ```bash
-grok --session latest
-grok -s <session-id>
+grok-vertex --session latest
+grok-vertex -s <session-id>
 ```
 
 Works in interactive mode too—same flag.
@@ -125,7 +133,7 @@ Works in interactive mode too—same flag.
 **Structured headless output:**
 
 ```bash
-grok --prompt "summarize the repo state" --format json
+grok-vertex --prompt "summarize the repo state" --format json
 ```
 
 `--format json` emits a newline-delimited JSON event stream instead of the
@@ -139,8 +147,8 @@ Grok ships a built-in `**computer**` sub-agent backed by `[agent-desktop](https:
 Ask for it in natural language, for example:
 
 ```bash
-grok "Use the computer sub-agent to take a screenshot of my host desktop and tell me what is open."
-grok "Use the computer sub-agent to launch Google Chrome, snapshot the UI, and tell me which refs correspond to the address bar and tabs."
+grok-vertex "Use the computer sub-agent to take a screenshot of my host desktop and tell me what is open."
+grok-vertex "Use the computer sub-agent to launch Google Chrome, snapshot the UI, and tell me which refs correspond to the address bar and tabs."
 ```
 
 Notes:
@@ -169,7 +177,7 @@ and updates CHANGELOG.md from the latest merged commits.
 Recurring schedules require the background daemon:
 
 ```bash
-grok daemon --background
+grok-vertex daemon --background
 ```
 
 Use `/schedule` in the TUI to browse saved schedules. One-time schedules start
@@ -179,13 +187,13 @@ daemon is active.
 **List Grok models and pricing hints:**
 
 ```bash
-grok models
+grok-vertex models
 ```
 
 **Pass an opening message without another prompt:**
 
 ```bash
-grok fix the flaky test in src/foo.test.ts
+grok-vertex fix the flaky test in src/foo.test.ts
 ```
 
 Media generation commands are inherited from the xAI backend. They are capability
@@ -233,7 +241,7 @@ GROK_API_KEY=your_key_here
 **CLI once:**
 
 ```bash
-grok -k your_key_here
+grok-vertex -k your_key_here
 ```
 
 **Saved in user settings** — `~/.grok/user-settings.json`:
@@ -284,10 +292,10 @@ This fork routes Grok traffic through **Google Cloud Vertex AI** as the preferre
 
 ```bash
 # CLI flag
-grok --provider vertex
+grok-vertex --provider vertex
 
 # Or via env var
-GROK_PROVIDER=vertex GROK_VERTEX_PROJECT_ID=my-gcp-project grok
+GROK_PROVIDER=vertex GROK_VERTEX_PROJECT_ID=my-gcp-project grok-vertex
 
 # Or save in ~/.grok/user-settings.json
 {
@@ -370,7 +378,7 @@ Send a voice note or audio attachment in Telegram and Grok will transcribe it wi
 Optional headless flow when you do not want the TUI open:
 
 ```bash
-grok telegram-bridge
+grok-vertex telegram-bridge
 ```
 
 Treat the bot token like a password.
@@ -443,8 +451,8 @@ All settings are saved in `~/.grok/user-settings.json` (user) and `.grok/setting
 Run `**/verify`** in the TUI or `**--verify`** on the CLI to verify your app locally:
 
 ```bash
-grok --verify
-grok -d /path/to/your/app --verify
+grok-vertex --verify
+grok-vertex -d /path/to/your/app --verify
 ```
 
 The agent inspects your project, figures out how to build and run it, spins up a sandbox, and produces a verification report with screenshots and video evidence. Works with any app type.
@@ -492,7 +500,7 @@ uses Google ADC and `GROK_VERTEX_PROJECT_ID`.
 export GROK_API_KEY=your_key_here
 
 # Or save to user settings
-grok -k your_key_here
+grok-vertex -k your_key_here
 ```
 
 Get native xAI API keys from [x.ai](https://x.ai).

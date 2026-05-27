@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP="grok"
+APP="grok-vertex"
 REPO="AmeerJ97/grok-cli-vertex"
 RELEASES_API="https://api.github.com/repos/${REPO}/releases"
-USER_DIR="${HOME}/.grok"
+USER_DIR="${HOME}/.grok-vertex"
 INSTALL_DIR="${USER_DIR}/bin"
 METADATA_PATH="${USER_DIR}/install.json"
-PATH_MARKER="# grok"
+PATH_MARKER="# grok-cli-vertex"
 
 requested_version=""
 binary_path=""
@@ -22,7 +22,7 @@ Install grok-cli-vertex from GitHub Releases.
 Usage:
   curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash
   curl -fsSL https://raw.githubusercontent.com/AmeerJ97/grok-cli-vertex/main/install.sh | bash -s -- --version 1.1.4
-  bash install.sh --binary /path/to/grok
+  bash install.sh --binary /path/to/grok-standalone
 
 Options:
   -v, --version <version>  Install a specific version
@@ -102,10 +102,10 @@ resolve_target() {
   TARGET="${OS}-${ARCH}"
   if [[ "$TARGET" == windows-* ]]; then
     ASSET_NAME="grok-${TARGET}.exe"
-    BINARY_NAME="grok.exe"
+    BINARY_NAME="${APP}.exe"
   else
     ASSET_NAME="grok-${TARGET}"
-    BINARY_NAME="grok"
+    BINARY_NAME="${APP}"
   fi
 }
 
@@ -351,8 +351,8 @@ echo ""
 echo "Grok ${INSTALLED_VERSION} installed to ${INSTALL_DIR}/${BINARY_NAME}"
 echo ""
 echo "Run:"
-echo "  grok --help"
+echo "  ${BINARY_NAME} --help"
 echo ""
 echo "To uninstall later:"
-echo "  grok uninstall"
+echo "  ${BINARY_NAME} uninstall"
 echo ""
