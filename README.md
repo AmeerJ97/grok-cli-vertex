@@ -1,4 +1,6 @@
-# grok-cli-vertex: a Vertex AI-focused Grok coding agent
+# grok-cli-vertex (archived)
+
+> **Archived / historical.** This repository is public and read-only. It preserves a community fork that added first-class **Google Cloud Vertex AI** support to the open-source `grok-cli` from [`superagent-ai/grok-cli`](https://github.com/superagent-ai/grok-cli). The Vertex integration was implemented independently before/around the official `grok cli` cloud support, and the upstream PR was never merged. No further releases or active maintenance are planned; it is kept here for reference.
 
 [CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
 [npm package inherited from upstream](https://www.npmjs.com/package/grok-dev)
@@ -8,7 +10,7 @@
 
 > **Disclaimer:** This project is community-built, open-source, and **not affiliated with, endorsed by, or sponsored by xAI Corp. or Google Cloud.** "Grok" is a trademark of xAI Corp. Vertex AI access to Grok is provided by Google Cloud as a partner integration.
 
-This is a standalone fork of `grok-cli` focused on making **Google Cloud Vertex AI** a first-class backend for Grok-powered coding workflows. The project direction is Vertex-first: provider abstraction, ADC-based authentication, Vertex model routing, capability gates, and reliable CLI behavior when Grok is accessed through Google Cloud.
+This is a Vertex-first fork of [`superagent-ai/grok-cli`](https://github.com/superagent-ai/grok-cli) focused on making **Google Cloud Vertex AI** a first-class backend for Grok-powered coding workflows: provider abstraction, ADC-based authentication, Vertex model routing, capability gates, and reliable CLI behavior when Grok is accessed through Google Cloud.
 
 Some native xAI paths remain because they are inherited from upstream and useful for compatibility, comparison, or fallback. They are not the main product focus of this fork.
 
@@ -19,11 +21,11 @@ Some native xAI paths remain because they are inherited from upstream and useful
 - [Maintainer runbook](docs/maintainer-runbook.md) — local checks, PR policy, release flow, and troubleshooting.
 - [Roadmap](docs/roadmap.md) — near-term hardening work and explicit non-goals.
 
-## Upstream attribution
+## Fork provenance and history
 
-This project started as a fork of the open-source `grok-cli` codebase. This repo
-is maintained as a separate Vertex-focused project, not as a replacement for or
-official distribution of the upstream project.
+This repo is a fork of the community [`superagent-ai/grok-cli`](https://github.com/superagent-ai/grok-cli) project, published on npm as [`grok-dev`](https://www.npmjs.com/package/grok-dev) (original contributor listed as "Vibe Kit"). The maintainer first implemented Google Cloud Vertex AI support as a pull request against that upstream repository. When the PR was not merged, the work was split into this standalone repository so it could be developed and used independently. As a result, the Vertex integration here predates/parallels the official `grok cli` cloud support, and it targets the Vertex partner-model API surface and Application Default Credentials as Google Cloud documented at the time.
+
+This repo is maintained as a separate Vertex-focused project, not as a replacement for or official distribution of the upstream project.
 
 ---
 
@@ -199,6 +201,21 @@ Inherited xAI features are compatibility surfaces. New project work should
 prefer the Vertex provider path unless a change is explicitly about fallback or
 upstream parity.
 
+### How the Vertex integration works (code-level)
+
+The provider is implemented under `src/providers/vertex/`:
+
+- `src/providers/vertex/index.ts` exposes a `VertexProviderAdapter` behind the shared `GrokProviderAdapter` contract defined in `src/providers/types.ts`. The adapter exposes `chatModel`, `resolveRuntime`, and a capability matrix that disables xAI-only features so they fail with a typed `ProviderCapabilityError` instead of an ambiguous API error.
+- `src/providers/vertex/auth.ts` uses `google-auth-library` `GoogleAuth` with Application Default Credentials and the `https://www.googleapis.com/auth/cloud-platform` scope. Only ADC is wired today; pre-minted OAuth tokens and service-account-bound API keys are tracked as follow-ups.
+- `src/providers/vertex/openapi.ts` intercepts `/chat/completions` requests emitted by the inherited `@ai-sdk/xai` client, converts the OpenAI-style request into the Vertex `GenerateContent` shape (`contents`, `systemInstruction`, `tools`/`toolConfig`, `generationConfig`), and forwards it to:
+  ```
+  https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/publishers/xai/models/{model}:{method}
+  ```
+  where `{method}` is `generateContent` or `streamGenerateContent?alt=sse` depending on the request's `stream` flag. The wire model id carries the `xai/` publisher prefix expected by the partner-model endpoint.
+- `image_url` image inputs are currently rejected with a typed request error; the adapter only translates text chat and tool payloads to Vertex.
+- `src/providers/vertex/models.ts` defines the four supported Vertex Grok SKUs, their aliases, context windows, and pricing estimates used for in-CLI cost surfacing.
+- Consumer code selects the provider through `createProvider()` in `src/providers/index.ts` based on the resolved `GROK_PROVIDER` / user settings.
+
 ---
 
 ## Native xAI fallback configuration
@@ -253,7 +270,7 @@ Optional: `**GROK_BASE_URL**` (default `https://api.x.ai/v1`), `**GROK_MODEL**`,
 
 ## Vertex AI Grok
 
-This fork routes Grok traffic through **Google Cloud Vertex AI** as the preferred backend. The four documented Vertex Grok SKUs are supported:
+This fork is designed around **Google Cloud Vertex AI**, but the active provider still defaults to the inherited native xAI backend for backward compatibility. Set `GROK_PROVIDER=vertex` (or pass `--provider vertex`) to route Grok traffic through Vertex AI. The four documented Vertex Grok SKUs are supported:
 
 - `grok-4.20-reasoning` (200K context — default chat model)
 - `grok-4.20-non-reasoning`
@@ -293,7 +310,6 @@ GROK_PROVIDER=vertex GROK_VERTEX_PROJECT_ID=my-gcp-project grok
 - Chat and streaming
 - Local function/tool calling (bash, file edits, LSP, etc.)
 - Structured outputs
-- Image inputs (vision)
 - Reasoning vs non-reasoning by SKU selection
 
 ### What's xAI-only (returns a typed error on Vertex)
@@ -311,10 +327,12 @@ GROK_PROVIDER=vertex GROK_VERTEX_PROJECT_ID=my-gcp-project grok
 | `GROK_PROVIDER` | Active backend (`xai` or `vertex`) | `xai` |
 | `GROK_VERTEX_PROJECT_ID` | GCP project for Vertex requests | — |
 | `GCP_PROJECT_ID` | Fallback for `GROK_VERTEX_PROJECT_ID` | — |
-| `GROK_VERTEX_LOCATION` | Vertex region (e.g. `us-central1`) | `global` |
+| `GROK_VERTEX_LOCATION` | Vertex region (e.g. `us-central1`) | — |
+| `GCP_VERTEX_LOCATION` | Fallback for `GROK_VERTEX_LOCATION` | — |
 | `GROK_VERTEX_BASE_URL` | Vertex API host override | `https://aiplatform.googleapis.com` |
+| `GROK_VERTEX_AUTH_MODE` | Auth mode (`adc`) | `adc` |
 
-> Authentication is currently **ADC only** (`gcloud auth application-default login`). Pre-minted OAuth tokens and service-account-bound API keys are documented in the Google Cloud quickstart but require additional CLI plumbing — tracked as a follow-up.
+> The resolved location falls back to `global` when neither `GROK_VERTEX_LOCATION` nor `GCP_VERTEX_LOCATION` is set. Authentication is currently **ADC only** (`gcloud auth application-default login`). Pre-minted OAuth tokens and service-account-bound API keys are documented in the Google Cloud quickstart but require additional CLI plumbing — tracked as a follow-up.
 
 > **Disclaimer:** Vertex AI access to Grok is provided by Google Cloud as a partner integration. This project is independent of both xAI Corp. and Google. Pricing and availability are governed by your Google Cloud contract.
 
