@@ -1,6 +1,6 @@
-# grok-cli-vertex (archived)
+# grok-cli-vertex
 
-> **Archived / historical.** This repository is public and read-only. It preserves a community fork that added first-class **Google Cloud Vertex AI** support to the open-source `grok-cli` from [`superagent-ai/grok-cli`](https://github.com/superagent-ai/grok-cli). The Vertex integration was implemented independently before/around the official `grok cli` cloud support, and the upstream PR was never merged. No further releases or active maintenance are planned; it is kept here for reference.
+> **Community fork — Vertex-first.** A fork of the open-source `grok-cli` from [`superagent-ai/grok-cli`](https://github.com/superagent-ai/grok-cli) that adds first-class **Google Cloud Vertex AI** support: Application Default Credentials, regional Vertex endpoints, and a typed provider capability model. The Vertex integration was implemented independently and released to the community **before official Vertex support existed**; the upstream PR was never merged, so it lives on here as a standalone, actively updated fork.
 
 [CI](https://github.com/AmeerJ97/grok-cli-vertex/actions/workflows/typecheck.yml)
 [npm package inherited from upstream](https://www.npmjs.com/package/grok-dev)
